@@ -1,3 +1,3 @@
-package com.example.todoapp.dto;
+package com.example.todoapp.adapter.in.http;
 
 public record CreateTodoRequest(String title) {}

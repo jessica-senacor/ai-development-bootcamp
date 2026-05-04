@@ -1,6 +1,6 @@
-package com.example.todoapp.controller;
+package com.example.todoapp.adapter.in.http;
 
-import com.example.todoapp.repository.TodoRepository;
+import com.example.todoapp.domain.port.out.TodoRepository;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,7 +1,7 @@
-package com.example.todoapp.controller;
+package com.example.todoapp.adapter.in.http;
 
-import com.example.todoapp.dto.TodoDTO;
-import com.example.todoapp.service.TodoService;
+import com.example.todoapp.domain.model.Todo;
+import com.example.todoapp.domain.port.in.TodoUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -24,13 +24,14 @@ class TodoControllerTest {
     MockMvc mockMvc;
 
     @MockitoBean
-    TodoService todoService;
+    TodoUseCase todoUseCase;
 
     @Test
     void getAllTodos_returns200WithTodos() throws Exception {
-        TodoDTO todo1 = new TodoDTO(null, "Buy milk", false);
-        TodoDTO todo2 = new TodoDTO(null, "Walk the dog", false);
-        when(todoService.getAll()).thenReturn(List.of(todo1, todo2));
+        when(todoUseCase.getAll()).thenReturn(List.of(
+                new Todo(null, "Buy milk", false),
+                new Todo(null, "Walk the dog", false)
+        ));
 
         mockMvc.perform(get("/api/todos"))
                 .andExpect(status().isOk())
@@ -42,8 +43,8 @@ class TodoControllerTest {
 
     @Test
     void postTodo_returns201WithTitleAndCompleted() throws Exception {
-        when(todoService.create("Buy milk"))
-                .thenReturn(new TodoDTO(null, "Buy milk", false));
+        when(todoUseCase.create("Buy milk"))
+                .thenReturn(new Todo(null, "Buy milk", false));
 
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)

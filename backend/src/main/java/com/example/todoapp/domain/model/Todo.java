@@ -1,24 +1,15 @@
-package com.example.todoapp.entity;
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+package com.example.todoapp.domain.model;
 
 import java.util.UUID;
 
-@Entity
 public class Todo {
 
-    @Id
-    private UUID id;
-    private String title;
-    private boolean completed;
-
-    protected Todo() {}
+    private final UUID id;
+    private final String title;
+    private final boolean completed;
 
     public Todo(UUID id, String title) {
-        this.id = id;
-        this.title = title;
-        this.completed = false;
+        this(id, title, false);
     }
 
     public Todo(UUID id, String title, boolean completed) {

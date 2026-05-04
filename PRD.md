@@ -1,7 +1,7 @@
 # Product Requirements Document (PRD)
 ## TODO App
 
-**Version:** 1.0  
+**Version:** 2.0  
 **Date:** 2026-04-21  
 **Status:** Draft
 
@@ -24,9 +24,9 @@ A simple, lightweight web-based TODO application that allows users to manage the
 ## 3. Non-Goals
 
 - User authentication or accounts
-- Backend or cloud sync
+- Cloud sync or multi-user support
 - Mobile or desktop native apps
-- Advanced features such as due dates, priorities, or tags
+- Advanced features such as priorities or tags
 
 ---
 
@@ -40,8 +40,10 @@ Anyone who needs a quick, no-setup task list in their browser — students, prof
 
 | Attribute | Details |
 |-----------|---------|
-| Platform  | Web (browser) |
-| Storage   | localStorage (data persists across page reloads; cleared when browser storage is cleared) |
+| Platform  | Web (browser) + REST backend |
+| Frontend  | Plain HTML/CSS/JS, no framework, no build tools |
+| Backend   | Spring Boot (Java 21), REST API at `/api/todos` |
+| Storage   | PostgreSQL via backend API; `localStorage` used temporarily until frontend-backend integration is complete |
 | Auth      | None |
 
 ---
@@ -111,7 +113,7 @@ Anyone who needs a quick, no-setup task list in their browser — students, prof
 
 ## 8. Data Model
 
-Each TODO item has the following structure (in-memory only):
+Each TODO item has the following structure (persisted via backend API):
 
 | Field       | Type    | Description                          |
 |-------------|---------|--------------------------------------|
@@ -128,7 +130,7 @@ Each TODO item has the following structure (in-memory only):
 |--------|--------|
 | Core actions work without errors | Add, check, uncheck, delete all function correctly |
 | Empty state handled | Shown when no TODOs are present |
-| Persistence | TODOs (including completed state and due date) survive page reload via localStorage |
+| Persistence | TODOs (including completed state and due date) survive page reload via backend API + PostgreSQL |
 
 ---
 

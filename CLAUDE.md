@@ -72,14 +72,18 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **Architecture:** See `ARCHITECTURE.md` for file structure, responsibilities, function signatures, and data flow.
 
-**Tech constraints:** Plain HTML/CSS/JS only — no frameworks, no build tools, no external dependencies.
+**Tech constraints:**
+- Frontend: Plain HTML/CSS/JS only — no frameworks, no build tools, no external dependencies
+- Backend: Spring Boot 4.x, Java 21, Maven, PostgreSQL, Spring Data JPA, Flyway
 
-**Hard scope boundaries (non-goals):** No user auth, no backend, no cloud sync, no native apps, no priorities/tags.
+**Hard scope boundaries (non-goals):** No user auth, no cloud sync, no native apps, no priorities/tags.
 
 **Data model (persisted via localStorage):**
 - `id` — string (unique identifier)
 - `title` — string (task text)
 - `completed` — boolean
 - `dueDate` — string | null (ISO 8601 date, optional)
+
+**Backend architecture:** Hexagonal (Ports & Adapters) — domain is isolated from infrastructure. See `ARCHITECTURE.md` for layer breakdown and REST API status.
 
 **Core features:** view list · add todo · toggle complete · delete todo · due date

@@ -1,12 +1,30 @@
 # Architecture
 
-## TODO App — v1.0
+## TODO App — v2.0
 
 ---
 
 ## Overview
 
-Single-page, in-browser TODO application. No build tools, no frameworks, no external dependencies. Plain web standards. TODOs are persisted via `localStorage`.
+Single-page, in-browser TODO application with a Spring Boot REST backend and PostgreSQL database. The frontend is plain HTML/CSS/JS (no build tools, no frameworks). State is persisted via the backend API; `localStorage` is no longer the primary storage.
+
+> **Integration status:** The backend currently supports listing and creating todos — toggle and delete are not yet implemented there. The frontend currently still reads/writes `localStorage` directly and does not call the backend API yet.
+
+---
+
+## System Overview
+
+```
+Browser (HTML/CSS/JS)
+        │
+        │  HTTP (REST)
+        ▼
+Spring Boot Backend  (/api/todos)
+        │
+        │  JPA
+        ▼
+PostgreSQL Database
+```
 
 ---
 
@@ -17,12 +35,31 @@ Single-page, in-browser TODO application. No build tools, no frameworks, no exte
 ├── index.html          # Page structure and DOM skeleton
 ├── css/
 │   └── style.css       # All visual styling
-└── src/
-    ├── app.js          # Event wiring and DOM references
-    ├── addTodo.js      # Creates and appends todo items
-    ├── toggleTodo.js   # Toggles completed state
-    ├── deleteTodo.js   # Removes todo items
-    └── storage.js      # localStorage persistence (save/load)
+├── src/
+│   ├── app.js          # Event wiring and DOM references
+│   ├── addTodo.js      # Creates and appends todo items
+│   ├── toggleTodo.js   # Toggles completed state
+│   ├── deleteTodo.js   # Removes todo items
+│   └── storage.js      # localStorage persistence (save/load) — to be replaced by API calls
+└── backend/            # Spring Boot application (Java 21, Maven)
+    └── src/main/java/com/example/todoapp/
+        ├── domain/
+        │   ├── model/Todo.java
+        │   └── port/
+        │       ├── in/TodoUseCase.java
+        │       └── out/TodoRepository.java
+        ├── application/
+        │   └── TodoUseCaseImpl.java
+        └── adapter/
+            ├── in/http/
+            │   ├── TodoController.java
+            │   ├── CreateTodoRequest.java
+            │   ├── TodoResponse.java
+            │   └── TestResetController.java
+            └── out/persistence/
+                ├── TodoJpaEntity.java
+                ├── TodoJpaRepository.java
+                └── TodoPersistenceAdapter.java
 ```
 
 ---
@@ -106,13 +143,92 @@ Input is trimmed before use; empty/whitespace submissions are ignored.
 
 ---
 
+## Backend — Hexagonal Architecture
+
+The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic in the domain is fully isolated from infrastructure concerns.
+
+### Layers
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  Adapter (in)          Application           Adapter (out)        │
+│  TodoController  →→  TodoUseCaseImpl  →→  TodoPersistenceAdapter │
+│  (HTTP/REST)          uses ports             (JPA/PostgreSQL)     │
+└──────────────────────────────────────────────────────────────────┘
+                          ↕ domain ports
+                     ┌─────────────────────┐
+                     │       Domain        │
+                     │  Todo               │
+                     │  TodoUseCase (in)   │
+                     │  TodoRepository (out)│
+                     └─────────────────────┘
+```
+
+### Domain (`domain/`)
+
+| Class | Description |
+|---|---|
+| `Todo` | Domain model: `id` (UUID), `title` (String), `completed` (boolean) |
+| `TodoUseCase` | Inbound port — `getAll()`, `create(title)` |
+| `TodoRepository` | Outbound port — `save()`, `findAll()`, `deleteAll()` |
+
+### Application (`application/`)
+
+| Class | Description |
+|---|---|
+| `TodoUseCaseImpl` | Implements `TodoUseCase`; orchestrates domain logic via `TodoRepository` |
+
+### Adapters
+
+**Inbound (`adapter/in/http/`)**
+
+| Class | Description |
+|---|---|
+| `TodoController` | `GET /api/todos`, `POST /api/todos` |
+| `CreateTodoRequest` | Request DTO: `{ title: String }` |
+| `TodoResponse` | Response DTO: `{ id: UUID, title: String, completed: boolean }` |
+| `TestResetController` | `DELETE /api/todos/reset` — test profile only, clears all data |
+
+**Outbound (`adapter/out/persistence/`)**
+
+| Class | Description |
+|---|---|
+| `TodoPersistenceAdapter` | Implements `TodoRepository` using Spring Data JPA |
+| `TodoJpaEntity` | JPA entity mapped to `todo` table |
+| `TodoJpaRepository` | Spring Data `JpaRepository` |
+
+### REST API
+
+| Method | Path | Status | Description |
+|---|---|---|---|
+| `GET` | `/api/todos` | ✅ implemented | Returns all todos |
+| `POST` | `/api/todos` | ✅ implemented | Creates a new todo; body: `{ "title": "..." }` |
+| `PATCH` | `/api/todos/{id}` | ❌ not yet | Toggle completed state |
+| `DELETE` | `/api/todos/{id}` | ❌ not yet | Delete a single todo |
+| `DELETE` | `/api/todos/reset` | ✅ test only | Deletes all todos (test profile only) |
+
+### Tech Stack
+
+| Attribute | Details |
+|---|---|
+| Language | Java 21 |
+| Framework | Spring Boot 4.x |
+| Persistence | Spring Data JPA + PostgreSQL |
+| DB migrations | Flyway |
+| Build | Maven |
+| Test DB | H2 (in-memory), Testcontainers (integration) |
+
+---
+
 ## Data Flow
 
 ```
 Page load
     │
     ▼
-load() — read todos[] from localStorage
+load() — read todos[] from localStorage     [current]
+    OR
+GET /api/todos                              [target]
     │
     ▼
 render() — initial UI
@@ -122,23 +238,21 @@ User action
     ▼
 Event handler (app.js)
     │
-    ▼
-Mutate todos[]
+    ├── add: POST /api/todos               [target — GET/POST already in backend]
+    ├── toggle: PATCH /api/todos/{id}      [target — not yet in backend]
+    └── delete: DELETE /api/todos/{id}     [target — not yet in backend]
     │
-    ├──▶ save() — write todos[] to localStorage
-    │
     ▼
-render() — rebuild DOM from todos[]
+render() — rebuild DOM from response
     │
     ▼
 Updated UI
 ```
 
-No two-way binding, no virtual DOM — every state change triggers a full list re-render. Sufficient for the expected data size (handful of items).
-
 ---
 
 ## Constraints (from PRD)
 
-- No auth, no backend, no routing
-- Plain HTML/CSS/JS only — no npm, no bundler, no framework
+- Frontend: Plain HTML/CSS/JS only — no npm, no bundler, no framework
+- Backend: Spring Boot, Java 21, Maven, PostgreSQL
+- No auth, no routing, no native apps

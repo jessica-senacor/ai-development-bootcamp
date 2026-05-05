@@ -2,6 +2,7 @@ package com.example.todoapp.adapter.in.http;
 
 import com.example.todoapp.domain.model.Todo;
 import com.example.todoapp.domain.port.in.TodoUseCase;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,7 +32,7 @@ public class TodoController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public TodoResponse create(@RequestBody CreateTodoRequest request) {
+    public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
         return toResponse(todoUseCase.create(request.title()));
     }
 

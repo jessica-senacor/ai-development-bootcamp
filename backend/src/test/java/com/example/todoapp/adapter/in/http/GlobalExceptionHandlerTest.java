@@ -59,8 +59,10 @@ class GlobalExceptionHandlerTest {
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{not valid json"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Malformed JSON request"));
     }
+
     @Test
     void whitespaceOnlyTitle_returns400WithFieldError() throws Exception {
         mockMvc.perform(post("/api/todos")

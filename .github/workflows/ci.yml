@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  test-java:
     runs-on: ubuntu-latest
 
     steps:
@@ -19,6 +19,25 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run Java unit tests
+        run: ./mvnw test
+        working-directory: backend
+
+  test-node:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -39,10 +58,6 @@ jobs:
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: PLAYWRIGHT_BROWSERS_PATH=.playwright-mcp npx playwright install --with-deps chromium
-
-      - name: Run Java unit tests
-        run: ./mvnw test
-        working-directory: backend
 
       - name: Run unit tests
         run: npm run test

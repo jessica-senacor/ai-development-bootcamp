@@ -10,7 +10,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.NoSuchElementException;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -35,17 +34,6 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.detail").value("Todo not found"));
     }
 
-    @Test
-    void emptyTitle_returns400WithFieldError() throws Exception {
-        mockMvc.perform(post("/api/todos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"title": ""}
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("title")));
-    }
-
 
 
     @Test
@@ -54,7 +42,7 @@ class GlobalExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("title")));
+                .andExpect(jsonPath("$.detail").value("title: " + CreateTodoRequest.TITLE_BLANK_MESSAGE));
     }
 
     @Test
@@ -63,7 +51,7 @@ class GlobalExceptionHandlerTest {
 
         mockMvc.perform(get("/api/todos"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.detail").value("An unexpected error occurred"));
+                .andExpect(jsonPath("$.detail").value(GlobalExceptionHandler.UNEXPECTED_ERROR_MESSAGE));
     }
 
     @Test
@@ -81,7 +69,7 @@ class GlobalExceptionHandlerTest {
                                 {"title": "   "}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value(containsString("title")));
+                .andExpect(jsonPath("$.detail").value("title: " + CreateTodoRequest.TITLE_BLANK_MESSAGE));
     }
     @Test
     void emptyTitle_returns400WithExactDetail() throws Exception {
@@ -91,6 +79,6 @@ class GlobalExceptionHandlerTest {
                                 {"title": ""}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("title: must not be blank"));
+                .andExpect(jsonPath("$.detail").value("title: " + CreateTodoRequest.TITLE_BLANK_MESSAGE));
     }
 }

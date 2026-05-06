@@ -5,6 +5,8 @@ import com.example.todoapp.domain.port.out.TodoRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class TodoPersistenceAdapter implements TodoRepository {
@@ -27,6 +29,11 @@ public class TodoPersistenceAdapter implements TodoRepository {
         return jpaRepository.findAll().stream()
                 .map(this::toDomain)
                 .toList();
+    }
+
+    @Override
+    public Optional<Todo> findById(UUID id) {
+        return jpaRepository.findById(id).map(this::toDomain);
     }
 
     @Override

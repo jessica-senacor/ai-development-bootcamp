@@ -5,6 +5,8 @@ import com.example.todoapp.domain.port.in.TodoUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/todos")
@@ -34,6 +37,11 @@ public class TodoController {
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
         return toResponse(todoUseCase.create(request.title()));
+    }
+
+    @PatchMapping("/{id}")
+    public TodoResponse toggle(@PathVariable UUID id) {
+        return toResponse(todoUseCase.toggle(id));
     }
 
     private TodoResponse toResponse(Todo todo) {

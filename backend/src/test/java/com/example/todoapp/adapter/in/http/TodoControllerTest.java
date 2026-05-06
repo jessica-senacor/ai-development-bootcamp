@@ -10,9 +10,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.UUID;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,5 +57,27 @@ class TodoControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Buy milk"))
                 .andExpect(jsonPath("$.completed").value(false));
+    }
+
+    @Test
+    void patchToggle_returns200WithUpdatedTodo() throws Exception {
+        UUID id = UUID.randomUUID();
+        boolean anyCompletedState = true;
+        when(todoUseCase.toggle(id)).thenReturn(new Todo(id, "Buy milk", anyCompletedState));
+
+        mockMvc.perform(patch("/api/todos/{id}", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id.toString()))
+                .andExpect(jsonPath("$.title").value("Buy milk"))
+                .andExpect(jsonPath("$.completed").value(anyCompletedState));
+    }
+
+    @Test
+    void patchToggle_whenTodoDoesNotExist_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+        when(todoUseCase.toggle(id)).thenThrow(new NoSuchElementException("Todo not found"));
+
+        mockMvc.perform(patch("/api/todos/{id}", id))
+                .andExpect(status().isNotFound());
     }
 }

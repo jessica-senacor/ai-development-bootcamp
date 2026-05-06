@@ -10,6 +10,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -37,6 +39,7 @@ class TodoUseCaseImplTest {
 
         List<Todo> result = todoUseCase.getAll();
 
+        assertNotNull(result);
         assertEquals(2, result.size());
         assertEquals(id1, result.get(0).getId());
         assertEquals("Buy milk", result.get(0).getTitle());
@@ -55,12 +58,50 @@ class TodoUseCaseImplTest {
         ArgumentCaptor<Todo> captor = ArgumentCaptor.forClass(Todo.class);
         verify(repository).save(captor.capture());
 
+        assertNotNull(captor.getValue());
         assertEquals("Buy milk", captor.getValue().getTitle());
         assertFalse(captor.getValue().isCompleted());
         assertNotNull(captor.getValue().getId());
 
+        assertNotNull(result);
         assertEquals("Buy milk", result.getTitle());
         assertFalse(result.isCompleted());
         assertNotNull(result.getId());
+    }
+
+    @Test
+    void toggle_whenTodoIsNotCompleted_returnsCompletedTodo() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.of(new Todo(id, "Buy milk", false)));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Todo result = todoUseCase.toggle(id);
+
+        assertNotNull(result);
+        assertTrue(result.isCompleted());
+        assertEquals(id, result.getId());
+        assertEquals("Buy milk", result.getTitle());
+    }
+
+    @Test
+    void toggle_whenTodoIsCompleted_returnsNotCompletedTodo() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.of(new Todo(id, "Buy milk", true)));
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Todo result = todoUseCase.toggle(id);
+
+        assertNotNull(result);
+        assertFalse(result.isCompleted());
+        assertEquals(id, result.getId());
+        assertEquals("Buy milk", result.getTitle());
+    }
+
+    @Test
+    void toggle_whenTodoDoesNotExist_throwsNoSuchElementException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> todoUseCase.toggle(id));
     }
 }

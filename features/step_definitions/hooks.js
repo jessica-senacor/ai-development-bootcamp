@@ -46,6 +46,7 @@ AfterAll(async function () {
 });
 
 Before(async function () {
+  await fetch('http://localhost:8080/api/todos/reset', { method: 'DELETE' }).catch(() => {});
   this.baseUrl = baseUrl;
   this.browser = await chromium.launch();
   this.page = await this.browser.newPage();

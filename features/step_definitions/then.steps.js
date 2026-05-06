@@ -14,8 +14,11 @@ Then('{string} is no longer in the list', async function (title) {
 });
 
 Then('{int} TODOs appear in the list', async function (expectedCount) {
-  const count = await this.page.locator('#todo-list li').count();
-  assert.strictEqual(count, expectedCount, `Expected ${expectedCount} item(s) but found ${count}`);
+  await this.page.waitForFunction(
+    (count) => document.querySelectorAll('#todo-list li').length === count,
+    expectedCount,
+    { timeout: 2000 }
+  );
 });
 
 Then('the text field is empty', async function () {

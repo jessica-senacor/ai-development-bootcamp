@@ -46,3 +46,22 @@ Feature: TODO REST API
   Scenario: Toggle eines nicht existierenden Todos
     When I toggle a todo with id "00000000-0000-0000-0000-000000000000"
     Then the response status is 404
+
+  Scenario: Todo löschen
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    Then the response status is 204
+
+  Scenario: Gelöschtes Todo ist nicht mehr in der Liste
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    And I get all todos
+    Then the response contains 0 todos
+
+  Scenario: Löschen eines nicht existierenden Todos
+    When I delete a todo with id "00000000-0000-0000-0000-000000000000"
+    Then the response status is 404
+
+  Scenario: Todo mit leerem Titel wird abgelehnt
+    When I create a todo with title ""
+    Then the response status is 400

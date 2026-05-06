@@ -1,17 +1,12 @@
-import { addTodo } from './addTodo.js';
-import { toggleTodo } from './toggleTodo.js';
-import { deleteTodo } from './deleteTodo.js';
-import { save, load } from './storage.js';
+import { fetchTodos, createTodo, toggleTodo, deleteTodo } from './api.js';
 
-let todos = load();
-
-const input = document.getElementById('todo-input');
+const input        = document.getElementById('todo-input');
 const dueDateInput = document.getElementById('due-date-input');
-const addBtn = document.getElementById('add-btn');
-const list = document.getElementById('todo-list');
-const emptyState = document.getElementById('empty-state');
+const addBtn       = document.getElementById('add-btn');
+const list         = document.getElementById('todo-list');
+const emptyState   = document.getElementById('empty-state');
 
-function render() {
+function render(todos) {
   list.innerHTML = '';
   todos.forEach(todo => {
     const li = document.createElement('li');
@@ -45,31 +40,38 @@ function render() {
   emptyState.classList.toggle('hidden', todos.length > 0);
 }
 
-function handleAdd() {
-  addTodo(todos, input.value, dueDateInput.value);
+async function refresh() {
+  const todos = await fetchTodos();
+  render(todos);
+}
+
+async function handleAdd() {
+  const title = input.value.trim();
+  if (!title) return;
+  const dueDate = dueDateInput.value || null;
   input.value = '';
   dueDateInput.value = '';
-  save(todos);
-  render();
+  await createTodo(title, dueDate);
+  await refresh();
 }
 
 addBtn.addEventListener('click', handleAdd);
 input.addEventListener('keydown', e => { if (e.key === 'Enter') handleAdd(); });
 
-list.addEventListener('change', e => {
+list.addEventListener('change', async e => {
   if (e.target.matches('input[type="checkbox"]')) {
-    toggleTodo(todos, e.target.closest('li').dataset.id);
-    save(todos);
-    render();
+    const id = e.target.closest('li').dataset.id;
+    await toggleTodo(id);
+    await refresh();
   }
 });
 
-list.addEventListener('click', e => {
+list.addEventListener('click', async e => {
   if (e.target.matches('.delete-btn')) {
-    deleteTodo(todos, e.target.closest('li').dataset.id);
-    save(todos);
-    render();
+    const id = e.target.closest('li').dataset.id;
+    await deleteTodo(id);
+    await refresh();
   }
 });
 
-render();
+refresh();

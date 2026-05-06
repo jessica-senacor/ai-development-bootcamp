@@ -15,3 +15,34 @@ Feature: TODO REST API
     And the response contains 2 todos
     And the response todos include a todo with title "Buy milk"
     And the response todos include a todo with title "Walk the dog"
+
+  Scenario: Todo als abgeschlossen markieren
+    When I create a todo with title "Buy milk"
+    And I toggle the todo
+    Then the response status is 200
+    And the response todo is completed
+
+  Scenario: Abgeschlossenes Todo zurück auf aktiv setzen
+    When I create a todo with title "Buy milk"
+    And I toggle the todo
+    And I toggle the todo
+    Then the response status is 200
+    And the response todo is not completed
+
+  Scenario: Nur das richtige Todo wird getoggled
+    Given a todo with title "Walk the dog" exists
+    When I create a todo with title "Buy milk"
+    And I toggle the todo
+    And I get all todos
+    Then the todo with title "Buy milk" in the list is completed
+    And the todo with title "Walk the dog" in the list is not completed
+
+  Scenario: Toggle-Zustand ist in der Gesamtliste sichtbar
+    When I create a todo with title "Buy milk"
+    And I toggle the todo
+    And I get all todos
+    Then the todo with title "Buy milk" in the list is completed
+
+  Scenario: Toggle eines nicht existierenden Todos
+    When I toggle a todo with id "00000000-0000-0000-0000-000000000000"
+    Then the response status is 404

@@ -45,3 +45,35 @@ Then('the response todos include a todo with title {string}', function (expected
   const found = this.responseBody.some((todo) => todo.title === expectedTitle);
   assert.strictEqual(found, true, `No todo with title "${expectedTitle}" found`);
 });
+
+When('I toggle the todo', async function () {
+  const id = this.todoId ?? this.responseBody.id;
+  this.todoId = id;
+  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+    method: 'PATCH',
+  });
+  this.responseBody = await this.response.json();
+});
+
+When('I toggle a todo with id {string}', async function (id) {
+  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+    method: 'PATCH',
+  });
+  this.responseBody = this.response.status !== 404 ? await this.response.json() : null;
+});
+
+Then('the response todo is completed', function () {
+  assert.strictEqual(this.responseBody.completed, true);
+});
+
+Then('the todo with title {string} in the list is completed', function (title) {
+  const todo = this.responseBody.find((t) => t.title === title);
+  assert.ok(todo, `Todo with title "${title}" not found in list`);
+  assert.strictEqual(todo.completed, true);
+});
+
+Then('the todo with title {string} in the list is not completed', function (title) {
+  const todo = this.responseBody.find((t) => t.title === title);
+  assert.ok(todo, `Todo with title "${title}" not found in list`);
+  assert.strictEqual(todo.completed, false);
+});

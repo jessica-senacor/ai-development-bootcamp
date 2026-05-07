@@ -4,6 +4,7 @@ import com.example.todoapp.domain.model.Todo;
 import com.example.todoapp.domain.port.in.TodoUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -42,6 +43,12 @@ public class TodoController {
     @PatchMapping("/{id}")
     public TodoResponse toggle(@PathVariable UUID id) {
         return toResponse(todoUseCase.toggle(id));
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
+        todoUseCase.delete(id);
     }
 
     private TodoResponse toResponse(Todo todo) {

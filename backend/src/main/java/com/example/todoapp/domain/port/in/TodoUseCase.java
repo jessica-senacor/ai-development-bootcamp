@@ -9,4 +9,5 @@ public interface TodoUseCase {
     List<Todo> getAll();
     Todo create(String title, String dueDate);
     Todo toggle(UUID id);
+    void delete(UUID id);
 }

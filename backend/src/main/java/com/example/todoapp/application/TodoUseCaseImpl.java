@@ -32,4 +32,8 @@ public class TodoUseCaseImpl implements TodoUseCase {
         Todo todo = repository.findById(id).orElseThrow();
         return repository.save(new Todo(todo.getId(), todo.getTitle(), !todo.isCompleted(), todo.getDueDate()));
     }
+
+    @Override
+    public void delete(UUID id) {
+    }
 }

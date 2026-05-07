@@ -10,5 +10,6 @@ public interface TodoRepository {
     Todo save(Todo todo);
     List<Todo> findAll();
     Optional<Todo> findById(UUID id);
+    void deleteById(UUID id);
     void deleteAll();
 }

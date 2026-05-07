@@ -62,3 +62,31 @@ Feature: TODO REST API
     When I create a todo with title "Submit report" and due date "2026-05-10"
     And I get all todos
     Then the todo with title "Submit report" in the list has due date "2026-05-10"
+
+  Scenario: Todo löschen
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    Then the response status is 204
+
+  Scenario: Gelöschtes Todo erscheint nicht mehr in der Gesamtliste
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    And I get all todos
+    Then the response status is 200
+    And the response contains 0 todos
+
+  Scenario: Nur das richtige Todo wird gelöscht
+    Given a todo with title "Walk the dog" exists
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    And I get all todos
+    Then the response contains 1 todos
+    And the response todos include a todo with title "Walk the dog"
+
+  Scenario: Löschen eines nicht existierenden Todos
+    When I delete a todo with id "00000000-0000-0000-0000-000000000000"
+    Then the response status is 404
+
+  Scenario: Todo mit ungültigem Fälligkeitsdatum erstellen
+    When I create a todo with title "Buy milk" and due date "not-a-date"
+    Then the response status is 400

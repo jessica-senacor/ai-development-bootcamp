@@ -42,10 +42,10 @@ public class TodoPersistenceAdapter implements TodoRepository {
     }
 
     private TodoJpaEntity toEntity(Todo todo) {
-        return new TodoJpaEntity(todo.getId(), todo.getTitle(), todo.isCompleted());
+        return new TodoJpaEntity(todo.getId(), todo.getTitle(), todo.isCompleted(), todo.getDueDate());
     }
 
     private Todo toDomain(TodoJpaEntity entity) {
-        return new Todo(entity.getId(), entity.getTitle(), entity.isCompleted());
+        return new Todo(entity.getId(), entity.getTitle(), entity.isCompleted(), entity.getDueDate());
     }
 }

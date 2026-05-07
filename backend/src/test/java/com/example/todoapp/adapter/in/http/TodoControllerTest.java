@@ -10,7 +10,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import static org.mockito.Mockito.when;
@@ -46,8 +45,8 @@ class TodoControllerTest {
 
     @Test
     void postTodo_returns201WithTitleAndCompleted() throws Exception {
-        when(todoUseCase.create("Buy milk"))
-                .thenReturn(new Todo(null, "Buy milk", false));
+        when(todoUseCase.create("Buy milk", null))
+                .thenReturn(new Todo(null, "Buy milk", false, null));
 
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +55,8 @@ class TodoControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Buy milk"))
-                .andExpect(jsonPath("$.completed").value(false));
+                .andExpect(jsonPath("$.completed").value(false))
+                .andExpect(jsonPath("$.dueDate").isEmpty());
     }
 
     @Test
@@ -69,15 +69,23 @@ class TodoControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.title").value("Buy milk"))
-                .andExpect(jsonPath("$.completed").value(anyCompletedState));
+                .andExpect(jsonPath("$.completed").value(anyCompletedState))
+                .andExpect(jsonPath("$.dueDate").isEmpty());
     }
 
     @Test
-    void patchToggle_whenTodoDoesNotExist_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
-        when(todoUseCase.toggle(id)).thenThrow(new NoSuchElementException("Todo not found"));
+    void postTodo_withDueDate_returns201WithDueDate() throws Exception {
+        when(todoUseCase.create("Submit report", "2026-05-10"))
+                .thenReturn(new Todo(null, "Submit report", false, "2026-05-10"));
 
-        mockMvc.perform(patch("/api/todos/{id}", id))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Submit report", "dueDate": "2026-05-10"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Submit report"))
+                .andExpect(jsonPath("$.dueDate").value("2026-05-10"));
     }
+
 }

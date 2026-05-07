@@ -7,6 +7,6 @@ import java.util.UUID;
 
 public interface TodoUseCase {
     List<Todo> getAll();
-    Todo create(String title);
+    Todo create(String title, String dueDate);
     Todo toggle(UUID id);
 }

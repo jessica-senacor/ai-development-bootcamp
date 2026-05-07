@@ -77,3 +77,26 @@ Then('the todo with title {string} in the list is not completed', function (titl
   assert.ok(todo, `Todo with title "${title}" not found in list`);
   assert.strictEqual(todo.completed, false);
 });
+
+When('I create a todo with title {string} and due date {string}', async function (title, dueDate) {
+  this.response = await fetch(`${API_BASE_URL}/api/todos`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, dueDate }),
+  });
+  this.responseBody = await this.response.json();
+});
+
+Then('the response todo has due date {string}', function (expectedDueDate) {
+  assert.strictEqual(this.responseBody.dueDate, expectedDueDate);
+});
+
+Then('the response todo has no due date', function () {
+  assert.strictEqual(this.responseBody.dueDate, null);
+});
+
+Then('the todo with title {string} in the list has due date {string}', function (title, expectedDueDate) {
+  const todo = this.responseBody.find((t) => t.title === title);
+  assert.ok(todo, `Todo with title "${title}" not found in list`);
+  assert.strictEqual(todo.dueDate, expectedDueDate);
+});

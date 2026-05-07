@@ -14,16 +14,19 @@ public class TodoJpaEntity {
     private UUID id;
     private String title;
     private boolean completed;
+    private String dueDate;
 
     protected TodoJpaEntity() {}
 
-    public TodoJpaEntity(UUID id, String title, boolean completed) {
+    public TodoJpaEntity(UUID id, String title, boolean completed, String dueDate) {
         this.id = id;
         this.title = title;
         this.completed = completed;
+        this.dueDate = dueDate;
     }
 
     public UUID getId() { return id; }
     public String getTitle() { return title; }
     public boolean isCompleted() { return completed; }
+    public String getDueDate() { return dueDate; }
 }

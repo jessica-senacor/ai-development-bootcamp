@@ -53,7 +53,7 @@ class TodoUseCaseImplTest {
     void create_savesAndReturnsTodo() {
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        Todo result = todoUseCase.create("Buy milk");
+        Todo result = todoUseCase.create("Buy milk", null);
 
         ArgumentCaptor<Todo> captor = ArgumentCaptor.forClass(Todo.class);
         verify(repository).save(captor.capture());

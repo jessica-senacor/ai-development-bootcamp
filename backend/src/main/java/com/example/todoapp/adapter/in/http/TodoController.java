@@ -36,7 +36,7 @@ public class TodoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
-        return toResponse(todoUseCase.create(request.title()));
+        return toResponse(todoUseCase.create(request.title(), request.dueDate()));
     }
 
     @PatchMapping("/{id}")
@@ -45,6 +45,6 @@ public class TodoController {
     }
 
     private TodoResponse toResponse(Todo todo) {
-        return new TodoResponse(todo.getId(), todo.getTitle(), todo.isCompleted());
+        return new TodoResponse(todo.getId(), todo.getTitle(), todo.isCompleted(), todo.getDueDate());
     }
 }

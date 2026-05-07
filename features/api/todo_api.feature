@@ -46,3 +46,19 @@ Feature: TODO REST API
   Scenario: Toggle eines nicht existierenden Todos
     When I toggle a todo with id "00000000-0000-0000-0000-000000000000"
     Then the response status is 404
+
+  Scenario: Todo mit Fälligkeitsdatum erstellen
+    When I create a todo with title "Submit report" and due date "2026-05-10"
+    Then the response status is 201
+    And the response todo has title "Submit report"
+    And the response todo has due date "2026-05-10"
+
+  Scenario: Todo ohne Fälligkeitsdatum erstellen
+    When I create a todo with title "Buy milk"
+    Then the response status is 201
+    And the response todo has no due date
+
+  Scenario: Fälligkeitsdatum ist in der Gesamtliste sichtbar
+    When I create a todo with title "Submit report" and due date "2026-05-10"
+    And I get all todos
+    Then the todo with title "Submit report" in the list has due date "2026-05-10"

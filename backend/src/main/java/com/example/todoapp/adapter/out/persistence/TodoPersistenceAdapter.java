@@ -37,6 +37,10 @@ public class TodoPersistenceAdapter implements TodoRepository {
     }
 
     @Override
+    public void deleteById(UUID id) {
+    }
+
+    @Override
     public void deleteAll() {
         jpaRepository.deleteAll();
     }

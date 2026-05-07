@@ -12,7 +12,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,6 +73,15 @@ class TodoControllerTest {
                 .andExpect(jsonPath("$.title").value("Buy milk"))
                 .andExpect(jsonPath("$.completed").value(anyCompletedState))
                 .andExpect(jsonPath("$.dueDate").isEmpty());
+    }
+
+    @Test
+    void deleteTodo_returns204() throws Exception {
+        UUID id = UUID.randomUUID();
+        doNothing().when(todoUseCase).delete(id);
+
+        mockMvc.perform(delete("/api/todos/{id}", id))
+                .andExpect(status().isNoContent());
     }
 
     @Test

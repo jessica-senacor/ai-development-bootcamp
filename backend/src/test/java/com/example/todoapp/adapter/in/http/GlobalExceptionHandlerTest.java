@@ -9,8 +9,11 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -88,6 +91,23 @@ class GlobalExceptionHandlerTest {
     @Test
     void invalidUuidInPath_returns400() throws Exception {
         mockMvc.perform(patch("/api/todos/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("id: invalid value 'not-a-uuid'"));
+    }
+
+    @Test
+    void deleteTodo_notFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+        doThrow(new NoSuchElementException("Todo not found")).when(todoUseCase).delete(id);
+
+        mockMvc.perform(delete("/api/todos/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Todo not found"));
+    }
+
+    @Test
+    void deleteTodo_invalidUuid_returns400() throws Exception {
+        mockMvc.perform(delete("/api/todos/not-a-uuid"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("id: invalid value 'not-a-uuid'"));
     }

@@ -87,6 +87,14 @@ Feature: TODO REST API
     When I delete a todo with id "00000000-0000-0000-0000-000000000000"
     Then the response status is 404
 
+  Scenario: Toggle mit ungültiger UUID
+    When I toggle a todo with id "not-a-uuid"
+    Then the response status is 400
+
+  Scenario: Löschen mit ungültiger UUID
+    When I delete a todo with id "not-a-uuid"
+    Then the response status is 400
+
   Scenario: Todo mit ungültigem Fälligkeitsdatum erstellen
     When I create a todo with title "Buy milk" and due date "not-a-date"
     Then the response status is 400

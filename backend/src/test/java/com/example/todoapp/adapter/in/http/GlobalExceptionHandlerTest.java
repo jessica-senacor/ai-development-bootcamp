@@ -74,6 +74,17 @@ class GlobalExceptionHandlerTest {
                 .andExpect(jsonPath("$.detail").value("title: " + CreateTodoRequest.TITLE_BLANK_MESSAGE));
     }
     @Test
+    void invalidDueDate_returns400() throws Exception {
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Buy milk", "dueDate": "not-a-date"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("dueDate: " + CreateTodoRequest.DUE_DATE_FORMAT_MESSAGE));
+    }
+
+    @Test
     void emptyTitle_returns400WithExactDetail() throws Exception {
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)

@@ -94,13 +94,7 @@ Then('the todo with title {string} in the list is not completed', function (titl
   assert.strictEqual(todo.completed, false);
 });
 
-When('I delete the todo', async function () {
-  const id = this.todoId ?? this.responseBody.id;
-  this.todoId = id;
-  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
-    method: 'DELETE',
-  });
-});
+
 
 When('I delete a todo with id {string}', async function (id) {
   this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {

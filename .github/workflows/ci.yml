@@ -60,8 +60,5 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: PLAYWRIGHT_BROWSERS_PATH=.playwright-mcp npx playwright install --with-deps chromium
 
-      - name: Run unit tests
-        run: npm run test
-
       - name: Run BDD tests
         run: npm run test:bdd

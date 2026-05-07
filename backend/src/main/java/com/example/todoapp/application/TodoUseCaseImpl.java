@@ -23,12 +23,19 @@ public class TodoUseCaseImpl implements TodoUseCase {
     }
 
     @Override
-    public Todo create(String title) {
-        return repository.save(new Todo(UUID.randomUUID(), title));
+    public Todo create(String title, String dueDate) {
+        return repository.save(new Todo(UUID.randomUUID(), title, false, dueDate));
     }
 
     @Override
     public Todo toggle(UUID id) {
-        return null;
+        Todo todo = repository.findById(id).orElseThrow();
+        return repository.save(new Todo(todo.getId(), todo.getTitle(), !todo.isCompleted(), todo.getDueDate()));
+    }
+
+    @Override
+    public void delete(UUID id) {
+        repository.findById(id).orElseThrow();
+        repository.deleteById(id);
     }
 }

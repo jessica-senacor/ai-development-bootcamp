@@ -37,15 +37,20 @@ public class TodoPersistenceAdapter implements TodoRepository {
     }
 
     @Override
+    public void deleteById(UUID id) {
+        jpaRepository.deleteById(id);
+    }
+
+    @Override
     public void deleteAll() {
         jpaRepository.deleteAll();
     }
 
     private TodoJpaEntity toEntity(Todo todo) {
-        return new TodoJpaEntity(todo.getId(), todo.getTitle(), todo.isCompleted());
+        return new TodoJpaEntity(todo.getId(), todo.getTitle(), todo.isCompleted(), todo.getDueDate());
     }
 
     private Todo toDomain(TodoJpaEntity entity) {
-        return new Todo(entity.getId(), entity.getTitle(), entity.isCompleted());
+        return new Todo(entity.getId(), entity.getTitle(), entity.isCompleted(), entity.getDueDate());
     }
 }

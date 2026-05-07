@@ -9,9 +9,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.NoSuchElementException;
+import java.util.UUID;
 
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -60,7 +64,7 @@ class GlobalExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{not valid json"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.detail").value("Malformed JSON request"));
+                .andExpect(jsonPath("$.detail").value(GlobalExceptionHandler.MALFORMED_JSON_MESSAGE));
     }
 
     @Test
@@ -73,6 +77,41 @@ class GlobalExceptionHandlerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.detail").value("title: " + CreateTodoRequest.TITLE_BLANK_MESSAGE));
     }
+    @Test
+    void invalidDueDate_returns400() throws Exception {
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Buy milk", "dueDate": "not-a-date"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("dueDate: " + CreateTodoRequest.DUE_DATE_FORMAT_MESSAGE));
+    }
+
+    @Test
+    void invalidUuidInPath_returns400() throws Exception {
+        mockMvc.perform(patch("/api/todos/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("id: invalid value 'not-a-uuid'"));
+    }
+
+    @Test
+    void deleteTodo_notFound_returns404() throws Exception {
+        UUID id = UUID.randomUUID();
+        doThrow(new NoSuchElementException("Todo not found")).when(todoUseCase).delete(id);
+
+        mockMvc.perform(delete("/api/todos/{id}", id))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Todo not found"));
+    }
+
+    @Test
+    void deleteTodo_invalidUuid_returns400() throws Exception {
+        mockMvc.perform(delete("/api/todos/not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("id: invalid value 'not-a-uuid'"));
+    }
+
     @Test
     void emptyTitle_returns400WithExactDetail() throws Exception {
         mockMvc.perform(post("/api/todos")

@@ -47,21 +47,54 @@ Feature: TODO REST API
     When I toggle a todo with id "00000000-0000-0000-0000-000000000000"
     Then the response status is 404
 
+  Scenario: Todo mit Fälligkeitsdatum erstellen
+    When I create a todo with title "Submit report" and due date "2026-05-10"
+    Then the response status is 201
+    And the response todo has title "Submit report"
+    And the response todo has due date "2026-05-10"
+
+  Scenario: Todo ohne Fälligkeitsdatum erstellen
+    When I create a todo with title "Buy milk"
+    Then the response status is 201
+    And the response todo has no due date
+
+  Scenario: Fälligkeitsdatum ist in der Gesamtliste sichtbar
+    When I create a todo with title "Submit report" and due date "2026-05-10"
+    And I get all todos
+    Then the todo with title "Submit report" in the list has due date "2026-05-10"
+
   Scenario: Todo löschen
     When I create a todo with title "Buy milk"
     And I delete the todo
     Then the response status is 204
 
-  Scenario: Gelöschtes Todo ist nicht mehr in der Liste
+  Scenario: Gelöschtes Todo erscheint nicht mehr in der Gesamtliste
     When I create a todo with title "Buy milk"
     And I delete the todo
     And I get all todos
-    Then the response contains 0 todos
+    Then the response status is 200
+    And the response contains 0 todos
+
+  Scenario: Nur das richtige Todo wird gelöscht
+    Given a todo with title "Walk the dog" exists
+    When I create a todo with title "Buy milk"
+    And I delete the todo
+    And I get all todos
+    Then the response contains 1 todos
+    And the response todos include a todo with title "Walk the dog"
 
   Scenario: Löschen eines nicht existierenden Todos
     When I delete a todo with id "00000000-0000-0000-0000-000000000000"
     Then the response status is 404
 
-  Scenario: Todo mit leerem Titel wird abgelehnt
-    When I create a todo with title ""
+  Scenario: Toggle mit ungültiger UUID
+    When I toggle a todo with id "not-a-uuid"
+    Then the response status is 400
+
+  Scenario: Löschen mit ungültiger UUID
+    When I delete a todo with id "not-a-uuid"
+    Then the response status is 400
+
+  Scenario: Todo mit ungültigem Fälligkeitsdatum erstellen
+    When I create a todo with title "Buy milk" and due date "not-a-date"
     Then the response status is 400

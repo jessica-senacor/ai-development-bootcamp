@@ -10,10 +10,12 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -46,8 +48,8 @@ class TodoControllerTest {
 
     @Test
     void postTodo_returns201WithTitleAndCompleted() throws Exception {
-        when(todoUseCase.create("Buy milk"))
-                .thenReturn(new Todo(null, "Buy milk", false));
+        when(todoUseCase.create("Buy milk", null))
+                .thenReturn(new Todo(null, "Buy milk", false, null));
 
         mockMvc.perform(post("/api/todos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -56,7 +58,8 @@ class TodoControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.title").value("Buy milk"))
-                .andExpect(jsonPath("$.completed").value(false));
+                .andExpect(jsonPath("$.completed").value(false))
+                .andExpect(jsonPath("$.dueDate").isEmpty());
     }
 
     @Test
@@ -65,19 +68,38 @@ class TodoControllerTest {
         boolean anyCompletedState = true;
         when(todoUseCase.toggle(id)).thenReturn(new Todo(id, "Buy milk", anyCompletedState));
 
-        mockMvc.perform(patch("/api/todos/{id}/toggle", id))
+        mockMvc.perform(patch("/api/todos/{id}", id))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.title").value("Buy milk"))
-                .andExpect(jsonPath("$.completed").value(anyCompletedState));
+                .andExpect(jsonPath("$.completed").value(anyCompletedState))
+                .andExpect(jsonPath("$.dueDate").isEmpty());
     }
 
     @Test
-    void patchToggle_whenTodoDoesNotExist_returns404() throws Exception {
+    void deleteTodo_returns204() throws Exception {
         UUID id = UUID.randomUUID();
-        when(todoUseCase.toggle(id)).thenThrow(new NoSuchElementException("Todo not found"));
+        doNothing().when(todoUseCase).delete(id);
 
-        mockMvc.perform(patch("/api/todos/{id}/toggle", id))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/api/todos/{id}", id))
+                .andExpect(status().isNoContent());
+
+        verify(todoUseCase).delete(id);
     }
+
+    @Test
+    void postTodo_withDueDate_returns201WithDueDate() throws Exception {
+        when(todoUseCase.create("Submit report", "2026-05-10"))
+                .thenReturn(new Todo(null, "Submit report", false, "2026-05-10"));
+
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Submit report", "dueDate": "2026-05-10"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.title").value("Submit report"))
+                .andExpect(jsonPath("$.dueDate").value("2026-05-10"));
+    }
+
 }

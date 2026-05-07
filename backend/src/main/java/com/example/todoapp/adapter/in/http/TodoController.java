@@ -5,6 +5,7 @@ import com.example.todoapp.domain.port.in.TodoUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,15 +39,21 @@ public class TodoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
-        return toResponse(todoUseCase.create(request.title()));
+        return toResponse(todoUseCase.create(request.title(), request.dueDate()));
     }
 
-    @PatchMapping("/{id}/toggle")
+    @PatchMapping("/{id}")
     public TodoResponse toggle(@PathVariable UUID id) {
         return toResponse(todoUseCase.toggle(id));
     }
 
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable UUID id) {
+        todoUseCase.delete(id);
+    }
+
     private TodoResponse toResponse(Todo todo) {
-        return new TodoResponse(todo.getId(), todo.getTitle(), todo.isCompleted());
+        return new TodoResponse(todo.getId(), todo.getTitle(), todo.isCompleted(), todo.getDueDate());
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
@@ -22,9 +23,16 @@ public class GlobalExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ProblemDetail handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getName() + ": invalid value '" + ex.getValue() + "'");
+    }
+
+    static final String MALFORMED_JSON_MESSAGE = "Malformed JSON request";
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ProblemDetail handleMalformedJson(HttpMessageNotReadableException ex) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Malformed JSON request");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, MALFORMED_JSON_MESSAGE);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

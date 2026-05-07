@@ -62,6 +62,22 @@ When('I toggle a todo with id {string}', async function (id) {
   this.responseBody = this.response.status !== 404 ? await this.response.json() : null;
 });
 
+When('I delete the todo', async function () {
+  const id = this.todoId ?? this.responseBody.id;
+  this.todoId = id;
+  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+    method: 'DELETE',
+  });
+  this.responseBody = this.response.status !== 204 ? await this.response.json() : null;
+});
+
+When('I delete a todo with id {string}', async function (id) {
+  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
+    method: 'DELETE',
+  });
+  this.responseBody = this.response.status !== 204 ? await this.response.json() : null;
+});
+
 Then('the response todo is completed', function () {
   assert.strictEqual(this.responseBody.completed, true);
 });

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -82,6 +83,8 @@ class TodoControllerTest {
 
         mockMvc.perform(delete("/api/todos/{id}", id))
                 .andExpect(status().isNoContent());
+
+        verify(todoUseCase).delete(id);
     }
 
     @Test

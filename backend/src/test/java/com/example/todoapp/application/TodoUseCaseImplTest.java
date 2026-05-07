@@ -16,6 +16,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -103,5 +104,25 @@ class TodoUseCaseImplTest {
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(NoSuchElementException.class, () -> todoUseCase.toggle(id));
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void delete_callsDeleteById() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.of(new Todo(id, "Buy milk", false)));
+
+        todoUseCase.delete(id);
+
+        verify(repository).deleteById(id);
+    }
+
+    @Test
+    void delete_whenTodoDoesNotExist_throwsNoSuchElementException() {
+        UUID id = UUID.randomUUID();
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(NoSuchElementException.class, () -> todoUseCase.delete(id));
+        verify(repository, never()).deleteById(any());
     }
 }

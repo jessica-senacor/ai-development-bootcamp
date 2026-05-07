@@ -35,5 +35,7 @@ public class TodoUseCaseImpl implements TodoUseCase {
 
     @Override
     public void delete(UUID id) {
+        repository.findById(id).orElseThrow();
+        repository.deleteById(id);
     }
 }

@@ -94,14 +94,6 @@ Then('the todo with title {string} in the list is not completed', function (titl
   assert.strictEqual(todo.completed, false);
 });
 
-
-
-When('I delete a todo with id {string}', async function (id) {
-  this.response = await fetch(`${API_BASE_URL}/api/todos/${id}`, {
-    method: 'DELETE',
-  });
-});
-
 When('I create a todo with title {string} and due date {string}', async function (title, dueDate) {
   this.response = await fetch(`${API_BASE_URL}/api/todos`, {
     method: 'POST',

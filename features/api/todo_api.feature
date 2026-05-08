@@ -98,3 +98,11 @@ Feature: TODO REST API
   Scenario: Todo mit ungültigem Fälligkeitsdatum erstellen
     When I create a todo with title "Buy milk" and due date "not-a-date"
     Then the response status is 400
+
+  Scenario: Todo mit semantisch ungültigem Monat erstellen
+    When I create a todo with title "Buy milk" and due date "2026-13-01"
+    Then the response status is 400
+
+  Scenario: Todo mit semantisch ungültigem Tag erstellen
+    When I create a todo with title "Buy milk" and due date "2026-02-30"
+    Then the response status is 400

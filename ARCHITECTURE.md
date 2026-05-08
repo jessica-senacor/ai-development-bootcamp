@@ -37,6 +37,7 @@ PostgreSQL Database
 │   └── style.css       # All visual styling
 ├── src/
 │   ├── app.js          # Event wiring and DOM references
+│   ├── auth.js         # Login/register/logout UI and token storage
 │   ├── addTodo.js      # Creates and appends todo items
 │   ├── toggleTodo.js   # Toggles completed state
 │   ├── deleteTodo.js   # Removes todo items
@@ -44,22 +45,37 @@ PostgreSQL Database
 └── backend/            # Spring Boot application (Java 21, Maven)
     └── src/main/java/com/example/todoapp/
         ├── domain/
-        │   ├── model/Todo.java
+        │   ├── model/
+        │   │   ├── Todo.java
+        │   │   └── User.java
         │   └── port/
-        │       ├── in/TodoUseCase.java
-        │       └── out/TodoRepository.java
+        │       ├── in/
+        │       │   ├── TodoUseCase.java
+        │       │   └── UserUseCase.java
+        │       └── out/
+        │           ├── TodoRepository.java
+        │           └── UserRepository.java
         ├── application/
-        │   └── TodoUseCaseImpl.java
+        │   ├── TodoUseCaseImpl.java
+        │   └── UserUseCaseImpl.java
         └── adapter/
             ├── in/http/
             │   ├── TodoController.java
+            │   ├── AuthController.java
             │   ├── CreateTodoRequest.java
+            │   ├── RegisterRequest.java
+            │   ├── LoginRequest.java
             │   ├── TodoResponse.java
+            │   ├── TokenResponse.java
+            │   ├── JwtFilter.java
             │   └── TestResetController.java
             └── out/persistence/
                 ├── TodoJpaEntity.java
                 ├── TodoJpaRepository.java
-                └── TodoPersistenceAdapter.java
+                ├── TodoPersistenceAdapter.java
+                ├── UserJpaEntity.java
+                ├── UserJpaRepository.java
+                └── UserPersistenceAdapter.java
 ```
 
 ---

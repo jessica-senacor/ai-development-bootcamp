@@ -28,6 +28,7 @@ BeforeAll({ timeout: 120_000 }, async function () {
 });
 
 AfterAll(async function () {
+  await fetch('http://localhost:8080/api/todos/reset', { method: 'DELETE' }).catch(() => {});
   backendProcess?.kill();
 });
 

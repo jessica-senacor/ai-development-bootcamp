@@ -131,6 +131,8 @@ h1 {
   flex: 1;
   font-size: 0.95rem;
   color: #333;
+  overflow-wrap: break-word;
+  min-width: 0;
 }
 
 #todo-list li.completed span {

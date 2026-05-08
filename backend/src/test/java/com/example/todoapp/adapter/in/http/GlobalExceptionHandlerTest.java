@@ -62,6 +62,28 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void blankUsername_returns400WithFieldError() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username": "", "password": "secret"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("username: " + RegisterRequest.BLANK_MESSAGE));
+    }
+
+    @Test
+    void blankPassword_returns400WithFieldError() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username": "alice", "password": ""}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("password: " + RegisterRequest.BLANK_MESSAGE));
+    }
+
+    @Test
     void noSuchElementException_returns404WithMessage() throws Exception {
         when(todoUseCase.getAll()).thenThrow(new NoSuchElementException("Todo not found"));
 

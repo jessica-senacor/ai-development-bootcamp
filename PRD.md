@@ -43,7 +43,7 @@ Anyone who needs a quick, no-setup task list in their browser — students, prof
 | Frontend  | Plain HTML/CSS/JS, no framework, no build tools |
 | Backend   | Spring Boot (Java 21), REST API at `/api/todos` |
 | Storage   | PostgreSQL via backend API; `localStorage` used temporarily until frontend-backend integration is complete |
-| Auth      | JWT (Bearer tokens); stored in `localStorage` on the frontend |
+| Auth      | JWT Bearer tokens; stored in `localStorage` on the frontend; passwords hashed server-side |
 
 ---
 

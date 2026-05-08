@@ -42,6 +42,7 @@ BeforeAll(async function () {
 });
 
 AfterAll(async function () {
+  await fetch('http://localhost:8080/api/todos/reset', { method: 'DELETE' }).catch(() => {});
   await new Promise((res) => server?.close(res));
 });
 

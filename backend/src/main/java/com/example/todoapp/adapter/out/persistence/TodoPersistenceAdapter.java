@@ -26,7 +26,7 @@ public class TodoPersistenceAdapter implements TodoRepository {
 
     @Override
     public List<Todo> findAll() {
-        return jpaRepository.findAll().stream()
+        return jpaRepository.findAllByOrderByCreatedAtAsc().stream()
                 .map(this::toDomain)
                 .toList();
     }

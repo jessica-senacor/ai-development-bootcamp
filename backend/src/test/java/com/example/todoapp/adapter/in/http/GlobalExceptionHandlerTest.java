@@ -1,6 +1,9 @@
 package com.example.todoapp.adapter.in.http;
 
+import com.example.todoapp.domain.InvalidCredentialsException;
+import com.example.todoapp.domain.UsernameAlreadyTakenException;
 import com.example.todoapp.domain.port.in.TodoUseCase;
+import com.example.todoapp.domain.port.in.UserUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,7 +23,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TodoController.class)
+@WebMvcTest({TodoController.class, AuthController.class})
 class GlobalExceptionHandlerTest {
 
     @Autowired
@@ -28,6 +31,35 @@ class GlobalExceptionHandlerTest {
 
     @MockitoBean
     TodoUseCase todoUseCase;
+
+    @MockitoBean
+    UserUseCase userUseCase;
+
+    @Test
+    void usernameAlreadyTaken_returns409WithMessage() throws Exception {
+        when(userUseCase.register("bob", "anything")).thenThrow(new UsernameAlreadyTakenException());
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username": "bob", "password": "anything"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(UsernameAlreadyTakenException.MESSAGE));
+    }
+
+    @Test
+    void invalidCredentials_returns401WithMessage() throws Exception {
+        when(userUseCase.login("dave", "wrong")).thenThrow(new InvalidCredentialsException());
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"username": "dave", "password": "wrong"}
+                                """))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.detail").value(InvalidCredentialsException.MESSAGE));
+    }
 
     @Test
     void noSuchElementException_returns404WithMessage() throws Exception {

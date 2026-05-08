@@ -20,5 +20,6 @@ public class TestResetController {
     @DeleteMapping("/reset")
     public void reset() {
         repository.deleteAll();
+        // TODO: also call userRepository.deleteAll() once UserRepository port exists
     }
 }

@@ -6,9 +6,7 @@
 
 ## Overview
 
-Single-page, in-browser TODO application with a Spring Boot REST backend and PostgreSQL database. The frontend is plain HTML/CSS/JS (no build tools, no frameworks). State is persisted via the backend API; `localStorage` is no longer the primary storage.
-
-> **Integration status:** The backend currently supports listing and creating todos — toggle and delete are not yet implemented there. The frontend currently still reads/writes `localStorage` directly and does not call the backend API yet.
+Single-page, in-browser TODO application with a Spring Boot REST backend and PostgreSQL database. The frontend is plain HTML/CSS/JS (no build tools, no frameworks). State is persisted via the backend API and PostgreSQL.
 
 ---
 
@@ -36,11 +34,8 @@ PostgreSQL Database
 ├── css/
 │   └── style.css       # All visual styling
 ├── src/
-│   ├── app.js          # Event wiring and DOM references
-│   ├── addTodo.js      # Creates and appends todo items
-│   ├── toggleTodo.js   # Toggles completed state
-│   ├── deleteTodo.js   # Removes todo items
-│   └── storage.js      # localStorage persistence (save/load) — to be replaced by API calls
+│   ├── app.js          # Event wiring, rendering, and DOM references
+│   └── api.js          # REST API client (fetch wrappers for all backend calls)
 └── backend/            # Spring Boot application (Java 21, Maven)
     └── src/main/java/com/example/todoapp/
         ├── domain/
@@ -92,52 +87,41 @@ No external fonts or icon libraries. Delete button uses a plain `✕` character.
 
 ---
 
-## storage.js
+## api.js
 
 Responsibilities:
-- Encapsulates all `localStorage` access under a single key (`'todos'`)
-- Keeps persistence details out of `app.js`
+- Encapsulates all HTTP calls to the backend
+- Keeps fetch details out of `app.js`
 
 | Export | Description |
 |---|---|
-| `save(todos)` | Serializes `todos` array to JSON and writes to `localStorage` |
-| `load()` | Reads and deserializes from `localStorage`; returns `[]` if nothing stored |
+| `fetchTodos()` | `GET /api/todos` — returns array of todo objects |
+| `createTodo(title, dueDate)` | `POST /api/todos` — creates and returns the new todo |
+| `toggleTodo(id)` | `PATCH /api/todos/{id}` — flips completed state, returns updated todo |
+| `deleteTodo(id)` | `DELETE /api/todos/{id}` |
 
 ---
 
 ## app.js
 
 Responsibilities:
-- Loads initial state from `storage.js` on startup
-- Maintains the `todos` array and renders the full list on every state change
-- Handles all user events (add, toggle, delete) and persists after each mutation
-
-### Data model
-
-```js
-// Persisted to localStorage under key 'todos'
-let todos = load();
-
-// Each item:
-{ id: string, title: string, completed: boolean, dueDate: string | null }
-```
-
-`id` is generated via `crypto.randomUUID()`.
+- On startup calls `fetchTodos()` and renders the full list
+- Handles all user events (add, toggle, delete) via `api.js`, then re-renders
 
 ### Functions
 
 | Function | Description |
 |---|---|
-| `addTodo(title)` | Appends a new item to `todos`, saves, re-renders |
-| `toggleTodo(id)` | Flips `completed` on the matching item, saves, re-renders |
-| `deleteTodo(id)` | Removes item by `id`, saves, re-renders |
-| `render()` | Clears and rebuilds `#todo-list` from `todos`; toggles empty-state |
+| `render(todos)` | Clears and rebuilds `#todo-list` from a todos array; toggles empty-state |
+| `refresh()` | Calls `fetchTodos()` and passes result to `render()` |
+| `handleAdd()` | Reads input, calls `createTodo()`, then `refresh()` |
 
-### Event wiring (set up on `DOMContentLoaded`)
+### Event wiring
 
-- `#add-btn` click → `addTodo`
-- `#todo-input` keydown `Enter` → `addTodo`
-- Delegated click on `#todo-list` → `toggleTodo` (checkbox) or `deleteTodo` (delete button)
+- `#add-btn` click → `handleAdd`
+- `#todo-input` keydown `Enter` → `handleAdd`
+- Delegated `change` on `#todo-list` checkbox → `toggleTodo`, then `refresh`
+- Delegated `click` on `.delete-btn` → `deleteTodo`, then `refresh`
 
 Input is trimmed before use; empty/whitespace submissions are ignored.
 
@@ -168,9 +152,9 @@ The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic
 
 | Class | Description |
 |---|---|
-| `Todo` | Domain model: `id` (UUID), `title` (String), `completed` (boolean) |
-| `TodoUseCase` | Inbound port — `getAll()`, `create(title)` |
-| `TodoRepository` | Outbound port — `save()`, `findAll()`, `deleteAll()` |
+| `Todo` | Domain model: `id` (UUID), `title` (String), `completed` (boolean), `dueDate` (String, nullable) |
+| `TodoUseCase` | Inbound port — `getAll()`, `create(title, dueDate)`, `toggle(id)`, `delete(id)` |
+| `TodoRepository` | Outbound port — `save()`, `findAll()`, `findById(id)`, `deleteById(id)`, `deleteAll()` |
 
 ### Application (`application/`)
 
@@ -184,9 +168,9 @@ The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic
 
 | Class | Description |
 |---|---|
-| `TodoController` | `GET /api/todos`, `POST /api/todos` |
-| `CreateTodoRequest` | Request DTO: `{ title: String }` |
-| `TodoResponse` | Response DTO: `{ id: UUID, title: String, completed: boolean }` |
+| `TodoController` | `GET /api/todos`, `POST /api/todos`, `PATCH /api/todos/{id}`, `DELETE /api/todos/{id}` |
+| `CreateTodoRequest` | Request DTO: `{ title: String, dueDate: String }` |
+| `TodoResponse` | Response DTO: `{ id: UUID, title: String, completed: boolean, dueDate: String }` |
 | `TestResetController` | `DELETE /api/todos/reset` — test profile only, clears all data |
 
 **Outbound (`adapter/out/persistence/`)**
@@ -202,9 +186,9 @@ The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic
 | Method | Path | Status | Description |
 |---|---|---|---|
 | `GET` | `/api/todos` | ✅ implemented | Returns all todos |
-| `POST` | `/api/todos` | ✅ implemented | Creates a new todo; body: `{ "title": "..." }` |
-| `PATCH` | `/api/todos/{id}` | ❌ not yet | Toggle completed state |
-| `DELETE` | `/api/todos/{id}` | ❌ not yet | Delete a single todo |
+| `POST` | `/api/todos` | ✅ implemented | Creates a new todo; body: `{ "title": "...", "dueDate": "..." }` |
+| `PATCH` | `/api/todos/{id}` | ✅ implemented | Toggles completed state |
+| `DELETE` | `/api/todos/{id}` | ✅ implemented | Deletes a single todo |
 | `DELETE` | `/api/todos/reset` | ✅ test only | Deletes all todos (test profile only) |
 
 ### Tech Stack
@@ -216,7 +200,7 @@ The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic
 | Persistence | Spring Data JPA + PostgreSQL |
 | DB migrations | Flyway |
 | Build | Maven |
-| Test DB | H2 (in-memory), Testcontainers (integration) |
+| Test DB | H2 in-memory (unit tests and BDD tests) |
 
 ---
 
@@ -226,9 +210,7 @@ The backend follows the **Ports & Adapters (Hexagonal) pattern**: business logic
 Page load
     │
     ▼
-load() — read todos[] from localStorage     [current]
-    OR
-GET /api/todos                              [target]
+GET /api/todos
     │
     ▼
 render() — initial UI
@@ -238,12 +220,12 @@ User action
     ▼
 Event handler (app.js)
     │
-    ├── add: POST /api/todos               [target — GET/POST already in backend]
-    ├── toggle: PATCH /api/todos/{id}      [target — not yet in backend]
-    └── delete: DELETE /api/todos/{id}     [target — not yet in backend]
+    ├── add:    POST /api/todos
+    ├── toggle: PATCH /api/todos/{id}
+    └── delete: DELETE /api/todos/{id}
     │
     ▼
-render() — rebuild DOM from response
+GET /api/todos → render() — rebuild DOM
     │
     ▼
 Updated UI

@@ -78,8 +78,8 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 **Hard scope boundaries (non-goals):** No user auth, no cloud sync, no native apps, no priorities/tags.
 
-**Data model (persisted via localStorage):**
-- `id` — string (unique identifier)
+**Data model (persisted via backend API / PostgreSQL):**
+- `id` — UUID (unique identifier)
 - `title` — string (task text)
 - `completed` — boolean
 - `dueDate` — string | null (ISO 8601 date, optional)

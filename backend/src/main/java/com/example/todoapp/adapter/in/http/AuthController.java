@@ -24,11 +24,12 @@ public class AuthController {
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public TokenResponse register(@Valid @RequestBody RegisterRequest request) {
-        throw new UnsupportedOperationException("not implemented yet");
+        userUseCase.register(request.username(), request.password());
+        return new TokenResponse(userUseCase.login(request.username(), request.password()));
     }
 
     @PostMapping("/login")
     public TokenResponse login(@RequestBody LoginRequest request) {
-        throw new UnsupportedOperationException("not implemented yet");
+        return new TokenResponse(userUseCase.login(request.username(), request.password()));
     }
 }

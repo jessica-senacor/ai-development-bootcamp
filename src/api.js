@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8080';
+const BASE = '';
 
 export async function fetchTodos() {
   const res = await fetch(`${BASE}/api/todos`);

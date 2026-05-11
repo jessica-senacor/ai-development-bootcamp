@@ -56,5 +56,5 @@ jobs:
           secrets: |
             SPRING_DATASOURCE_PASSWORD=todoapp-db-password:latest
           env_vars: |
-            SPRING_DATASOURCE_URL=jdbc:postgresql:///todoapp?cloudSqlInstance=${{ secrets.GCP_CLOUDSQL_INSTANCE }}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
+            SPRING_DATASOURCE_URL=jdbc:postgresql:///todoapp?cloudSqlInstance=${{secrets.GCP_CLOUDSQL_INSTANCE}}&socketFactory=com.google.cloud.sql.postgres.SocketFactory
             SPRING_DATASOURCE_USERNAME=todoapp

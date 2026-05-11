@@ -1,6 +1,6 @@
 import { Before, After, BeforeAll, AfterAll, setDefaultTimeout } from '@cucumber/cucumber';
 import { chromium } from 'playwright';
-import { createServer } from 'http';
+import { createServer, request as httpRequest } from 'http';
 import { readFileSync } from 'fs';
 import { resolve, extname } from 'path';
 import { fileURLToPath } from 'url';
@@ -19,6 +19,20 @@ const MIME = {
 function startServer() {
   return new Promise((res) => {
     const server = createServer((req, reply) => {
+      // The test server now proxies any /api/* request to localhost:8080, so
+      // BASE = '' works correctly in both environments:
+      if (req.url.startsWith('/api/')) {
+        const pr = httpRequest(
+          { hostname: 'localhost', port: 8080, path: req.url, method: req.method, headers: req.headers },
+          (backendRes) => {
+            reply.writeHead(backendRes.statusCode, backendRes.headers);
+            backendRes.pipe(reply);
+          }
+        );
+        pr.on('error', () => { reply.writeHead(502); reply.end('Bad gateway'); });
+        req.pipe(pr);
+        return;
+      }
       const filePath = projectRoot + (req.url === '/' ? '/index.html' : req.url);
       try {
         const body = readFileSync(filePath);
@@ -42,6 +56,7 @@ BeforeAll(async function () {
 });
 
 AfterAll(async function () {
+  await fetch('http://localhost:8080/api/todos/reset', { method: 'DELETE' }).catch(() => {});
   await new Promise((res) => server?.close(res));
 });
 

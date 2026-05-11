@@ -106,52 +106,41 @@ No external fonts or icon libraries. Delete button uses a plain `✕` character.
 
 ---
 
-## storage.js
+## api.js
 
 Responsibilities:
-- Encapsulates all `localStorage` access under a single key (`'todos'`)
-- Keeps persistence details out of `app.js`
+- Encapsulates all HTTP calls to the backend
+- Keeps fetch details out of `app.js`
 
 | Export | Description |
 |---|---|
-| `save(todos)` | Serializes `todos` array to JSON and writes to `localStorage` |
-| `load()` | Reads and deserializes from `localStorage`; returns `[]` if nothing stored |
+| `fetchTodos()` | `GET /api/todos` — returns array of todo objects |
+| `createTodo(title, dueDate)` | `POST /api/todos` — creates and returns the new todo |
+| `toggleTodo(id)` | `PATCH /api/todos/{id}` — flips completed state, returns updated todo |
+| `deleteTodo(id)` | `DELETE /api/todos/{id}` |
 
 ---
 
 ## app.js
 
 Responsibilities:
-- Loads initial state from `storage.js` on startup
-- Maintains the `todos` array and renders the full list on every state change
-- Handles all user events (add, toggle, delete) and persists after each mutation
-
-### Data model
-
-```js
-// Persisted to localStorage under key 'todos'
-let todos = load();
-
-// Each item:
-{ id: string, title: string, completed: boolean, dueDate: string | null }
-```
-
-`id` is generated via `crypto.randomUUID()`.
+- On startup calls `fetchTodos()` and renders the full list
+- Handles all user events (add, toggle, delete) via `api.js`, then re-renders
 
 ### Functions
 
 | Function | Description |
 |---|---|
-| `addTodo(title)` | Appends a new item to `todos`, saves, re-renders |
-| `toggleTodo(id)` | Flips `completed` on the matching item, saves, re-renders |
-| `deleteTodo(id)` | Removes item by `id`, saves, re-renders |
-| `render()` | Clears and rebuilds `#todo-list` from `todos`; toggles empty-state |
+| `render(todos)` | Clears and rebuilds `#todo-list` from a todos array; toggles empty-state |
+| `refresh()` | Calls `fetchTodos()` and passes result to `render()` |
+| `handleAdd()` | Reads input, calls `createTodo()`, then `refresh()` |
 
-### Event wiring (set up on `DOMContentLoaded`)
+### Event wiring
 
-- `#add-btn` click → `addTodo`
-- `#todo-input` keydown `Enter` → `addTodo`
-- Delegated click on `#todo-list` → `toggleTodo` (checkbox) or `deleteTodo` (delete button)
+- `#add-btn` click → `handleAdd`
+- `#todo-input` keydown `Enter` → `handleAdd`
+- Delegated `change` on `#todo-list` checkbox → `toggleTodo`, then `refresh`
+- Delegated `click` on `.delete-btn` → `deleteTodo`, then `refresh`
 
 Input is trimmed before use; empty/whitespace submissions are ignored.
 
@@ -276,7 +265,7 @@ Event handler (app.js)
     └── delete: DELETE /api/todos/{id}
     │
     ▼
-render() — rebuild DOM from response
+GET /api/todos → render() — rebuild DOM
     │
     ▼
 Updated UI

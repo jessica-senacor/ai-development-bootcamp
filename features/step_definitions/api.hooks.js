@@ -9,7 +9,7 @@ const backendDir = resolve(__dirname, '../../backend');
 let backendProcess;
 
 BeforeAll({ timeout: 120_000 }, async function () {
-  backendProcess = spawn('./mvnw', ['spring-boot:run'], {
+  backendProcess = spawn('mvn', ['spring-boot:run'], {
     cwd: backendDir,
     stdio: 'inherit',
     env: { ...process.env, SPRING_PROFILES_ACTIVE: 'test' },
@@ -28,6 +28,7 @@ BeforeAll({ timeout: 120_000 }, async function () {
 });
 
 AfterAll(async function () {
+  await fetch('http://localhost:8080/api/todos/reset', { method: 'DELETE' }).catch(() => {});
   backendProcess?.kill();
 });
 

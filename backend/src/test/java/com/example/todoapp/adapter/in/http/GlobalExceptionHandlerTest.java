@@ -165,6 +165,28 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
+    void invalidDueDate_invalidMonth_returns400() throws Exception {
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Buy milk", "dueDate": "2026-13-01"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("dueDate: " + CreateTodoRequest.DUE_DATE_FORMAT_MESSAGE));
+    }
+
+    @Test
+    void invalidDueDate_invalidDay_returns400() throws Exception {
+        mockMvc.perform(post("/api/todos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title": "Buy milk", "dueDate": "2026-02-30"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("dueDate: " + CreateTodoRequest.DUE_DATE_FORMAT_MESSAGE));
+    }
+
+    @Test
     void invalidUuidInPath_returns400() throws Exception {
         mockMvc.perform(patch("/api/todos/not-a-uuid"))
                 .andExpect(status().isBadRequest())

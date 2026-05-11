@@ -9,7 +9,7 @@ const backendDir = resolve(__dirname, '../../backend');
 let backendProcess;
 
 BeforeAll({ timeout: 120_000 }, async function () {
-  backendProcess = spawn('./mvnw', ['spring-boot:run'], {
+  backendProcess = spawn('mvn', ['spring-boot:run'], {
     cwd: backendDir,
     stdio: 'inherit',
     env: { ...process.env, SPRING_PROFILES_ACTIVE: 'test' },

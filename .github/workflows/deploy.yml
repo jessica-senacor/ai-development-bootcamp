@@ -51,7 +51,7 @@ jobs:
           service: ${{ env.SERVICE }}
           region: ${{ env.REGION }}
           image: ${{ env.IMAGE }}
-          add_cloudsql_instances: ${{ secrets.GCP_CLOUDSQL_INSTANCE }}
+          flags: --add-cloudsql-instances=${{ secrets.GCP_CLOUDSQL_INSTANCE }}
           secrets: |
             SPRING_DATASOURCE_PASSWORD=todoapp-db-password:latest
           env_vars: |

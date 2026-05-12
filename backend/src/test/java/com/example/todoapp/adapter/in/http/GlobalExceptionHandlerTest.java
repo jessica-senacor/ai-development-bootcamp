@@ -4,16 +4,25 @@ import com.example.todoapp.domain.InvalidCredentialsException;
 import com.example.todoapp.domain.UsernameAlreadyTakenException;
 import com.example.todoapp.domain.port.in.TodoUseCase;
 import com.example.todoapp.domain.port.in.UserUseCase;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -24,7 +33,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest({TodoController.class, AuthController.class})
+@AutoConfigureMockMvc(addFilters = false)
 class GlobalExceptionHandlerTest {
+
+    private static final UUID USER_ID = UUID.randomUUID();
 
     @Autowired
     MockMvc mockMvc;
@@ -34,6 +46,21 @@ class GlobalExceptionHandlerTest {
 
     @MockitoBean
     UserUseCase userUseCase;
+
+    @MockitoBean
+    TokenIssuer tokenIssuer;
+
+    @BeforeEach
+    void setUp() {
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(USER_ID, null, Collections.emptyList()));
+        SecurityContextHolder.setContext(context);
+    }
+
+    @AfterEach
+    void tearDown() {
+        SecurityContextHolder.clearContext();
+    }
 
     @Test
     void usernameAlreadyTaken_returns409WithMessage() throws Exception {
@@ -50,7 +77,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void invalidCredentials_returns401WithMessage() throws Exception {
-        when(userUseCase.login("dave", "wrong")).thenThrow(new InvalidCredentialsException());
+        when(userUseCase.authenticate("dave", "wrong")).thenThrow(new InvalidCredentialsException());
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -107,7 +134,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void noSuchElementException_returns404WithMessage() throws Exception {
-        when(todoUseCase.getAll()).thenThrow(new NoSuchElementException("Todo not found"));
+        when(todoUseCase.getAll(any(UUID.class))).thenThrow(new NoSuchElementException("Todo not found"));
 
         mockMvc.perform(get("/api/todos"))
                 .andExpect(status().isNotFound())
@@ -127,7 +154,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void unexpectedException_returns500WithoutInternalDetails() throws Exception {
-        when(todoUseCase.getAll()).thenThrow(new RuntimeException("internal details must not leak"));
+        when(todoUseCase.getAll(any(UUID.class))).thenThrow(new RuntimeException("internal details must not leak"));
 
         mockMvc.perform(get("/api/todos"))
                 .andExpect(status().isInternalServerError())
@@ -196,7 +223,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void deleteTodo_notFound_returns404() throws Exception {
         UUID id = UUID.randomUUID();
-        doThrow(new NoSuchElementException("Todo not found")).when(todoUseCase).delete(id);
+        doThrow(new NoSuchElementException("Todo not found")).when(todoUseCase).delete(any(UUID.class), eq(id));
 
         mockMvc.perform(delete("/api/todos/{id}", id))
                 .andExpect(status().isNotFound())

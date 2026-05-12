@@ -2,7 +2,9 @@ package com.example.todoapp.application;
 
 import com.example.todoapp.domain.InvalidCredentialsException;
 import com.example.todoapp.domain.UsernameAlreadyTakenException;
+import com.example.todoapp.domain.model.AuthenticatedUser;
 import com.example.todoapp.domain.model.User;
+import com.example.todoapp.domain.port.out.PasswordHasher;
 import com.example.todoapp.domain.port.out.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -23,24 +26,29 @@ class UserUseCaseImplTest {
     @Mock
     UserRepository repository;
 
+    @Mock
+    PasswordHasher passwordHasher;
+
     @InjectMocks
     UserUseCaseImpl userUseCase;
 
     @Test
     void register_savesUserWithHashedPassword() {
         when(repository.existsByUsername("alice")).thenReturn(false);
+        when(passwordHasher.hash("secret")).thenReturn("hashed-secret");
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         userUseCase.register("alice", "secret");
 
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(repository).save(captor.capture());
-        assertNotEquals("secret", captor.getValue().getPasswordHash());
+        assertEquals("hashed-secret", captor.getValue().getPasswordHash());
     }
 
     @Test
     void register_returnsUserWithCorrectUsernameAndId() {
         when(repository.existsByUsername("alice")).thenReturn(false);
+        when(passwordHasher.hash("secret")).thenReturn("hashed-secret");
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         User result = userUseCase.register("alice", "secret");
@@ -59,32 +67,31 @@ class UserUseCaseImplTest {
     }
 
     @Test
-    void login_withValidCredentials_returnsToken() {
-        when(repository.existsByUsername("alice")).thenReturn(false);
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        User registered = userUseCase.register("alice", "secret");
-        when(repository.findByUsername("alice")).thenReturn(Optional.of(registered));
+    void authenticate_withValidCredentials_returnsAuthenticatedUser() {
+        User stored = new User(UUID.randomUUID(), "alice", "hashed-secret");
+        when(repository.findByUsername("alice")).thenReturn(Optional.of(stored));
+        when(passwordHasher.matches("secret", "hashed-secret")).thenReturn(true);
 
-        String token = userUseCase.login("alice", "secret");
+        AuthenticatedUser result = userUseCase.authenticate("alice", "secret");
 
-        assertNotNull(token);
-        assertFalse(token.isBlank());
+        assertNotNull(result);
+        assertEquals(stored.getId(), result.getId());
+        assertEquals("alice", result.getUsername());
     }
 
     @Test
-    void login_withWrongPassword_throwsInvalidCredentialsException() {
-        when(repository.existsByUsername("alice")).thenReturn(false);
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-        User registered = userUseCase.register("alice", "secret");
-        when(repository.findByUsername("alice")).thenReturn(Optional.of(registered));
+    void authenticate_withWrongPassword_throwsInvalidCredentialsException() {
+        User stored = new User(UUID.randomUUID(), "alice", "hashed-secret");
+        when(repository.findByUsername("alice")).thenReturn(Optional.of(stored));
+        when(passwordHasher.matches("wrong", "hashed-secret")).thenReturn(false);
 
-        assertThrows(InvalidCredentialsException.class, () -> userUseCase.login("alice", "wrong"));
+        assertThrows(InvalidCredentialsException.class, () -> userUseCase.authenticate("alice", "wrong"));
     }
 
     @Test
-    void login_withUnknownUsername_throwsInvalidCredentialsException() {
+    void authenticate_withUnknownUsername_throwsInvalidCredentialsException() {
         when(repository.findByUsername("ghost")).thenReturn(Optional.empty());
 
-        assertThrows(InvalidCredentialsException.class, () -> userUseCase.login("ghost", "secret"));
+        assertThrows(InvalidCredentialsException.class, () -> userUseCase.authenticate("ghost", "secret"));
     }
 }

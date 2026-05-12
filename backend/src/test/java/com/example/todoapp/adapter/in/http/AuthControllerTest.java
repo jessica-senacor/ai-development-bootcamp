@@ -1,9 +1,11 @@
 package com.example.todoapp.adapter.in.http;
 
+import com.example.todoapp.domain.model.AuthenticatedUser;
 import com.example.todoapp.domain.model.User;
 import com.example.todoapp.domain.port.in.UserUseCase;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -17,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(AuthController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class AuthControllerTest {
 
     @Autowired
@@ -25,10 +28,16 @@ class AuthControllerTest {
     @MockitoBean
     UserUseCase userUseCase;
 
+    @MockitoBean
+    TokenIssuer tokenIssuer;
+
     @Test
     void register_validBody_returns201WithToken() throws Exception {
-        when(userUseCase.register("alice", "secret")).thenReturn(new User(UUID.randomUUID(), "alice", "hash"));
-        when(userUseCase.login("alice", "secret")).thenReturn("jwt-token");
+        UUID id = UUID.randomUUID();
+        AuthenticatedUser authenticated = new AuthenticatedUser(id, "alice");
+        when(userUseCase.register("alice", "secret")).thenReturn(new User(id, "alice", "hash"));
+        when(userUseCase.authenticate("alice", "secret")).thenReturn(authenticated);
+        when(tokenIssuer.issue(authenticated)).thenReturn("jwt-token");
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -41,7 +50,10 @@ class AuthControllerTest {
 
     @Test
     void login_validCredentials_returns200WithToken() throws Exception {
-        when(userUseCase.login("carol", "pass456")).thenReturn("jwt-token");
+        UUID id = UUID.randomUUID();
+        AuthenticatedUser authenticated = new AuthenticatedUser(id, "carol");
+        when(userUseCase.authenticate("carol", "pass456")).thenReturn(authenticated);
+        when(tokenIssuer.issue(authenticated)).thenReturn("jwt-token");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

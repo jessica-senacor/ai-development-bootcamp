@@ -12,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -61,10 +60,10 @@ class UserUseCaseImplTest {
 
     @Test
     void login_withValidCredentials_returnsToken() {
-        UUID id = UUID.randomUUID();
-        when(repository.findByUsername("alice")).thenReturn(
-                Optional.of(new User(id, "alice", hashOf("secret")))
-        );
+        when(repository.existsByUsername("alice")).thenReturn(false);
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User registered = userUseCase.register("alice", "secret");
+        when(repository.findByUsername("alice")).thenReturn(Optional.of(registered));
 
         String token = userUseCase.login("alice", "secret");
 
@@ -74,10 +73,10 @@ class UserUseCaseImplTest {
 
     @Test
     void login_withWrongPassword_throwsInvalidCredentialsException() {
-        UUID id = UUID.randomUUID();
-        when(repository.findByUsername("alice")).thenReturn(
-                Optional.of(new User(id, "alice", hashOf("secret")))
-        );
+        when(repository.existsByUsername("alice")).thenReturn(false);
+        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        User registered = userUseCase.register("alice", "secret");
+        when(repository.findByUsername("alice")).thenReturn(Optional.of(registered));
 
         assertThrows(InvalidCredentialsException.class, () -> userUseCase.login("alice", "wrong"));
     }
@@ -87,13 +86,5 @@ class UserUseCaseImplTest {
         when(repository.findByUsername("ghost")).thenReturn(Optional.empty());
 
         assertThrows(InvalidCredentialsException.class, () -> userUseCase.login("ghost", "secret"));
-    }
-
-    // Produces a BCrypt hash of the given plain-text password so tests can seed
-    // repository mocks with a realistic hash without depending on the use case itself.
-    private static String hashOf(String password) {
-        return org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder.class
-                .cast(new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder())
-                .encode(password);
     }
 }

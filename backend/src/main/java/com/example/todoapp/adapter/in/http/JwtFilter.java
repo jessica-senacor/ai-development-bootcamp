@@ -10,6 +10,12 @@ import java.io.IOException;
 
 public class JwtFilter extends OncePerRequestFilter {
 
+    private final TokenVerifier tokenVerifier;
+
+    public JwtFilter(TokenVerifier tokenVerifier) {
+        this.tokenVerifier = tokenVerifier;
+    }
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {

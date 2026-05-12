@@ -1,7 +1,9 @@
 package com.example.todoapp.application;
 
+import com.example.todoapp.domain.model.AuthenticatedUser;
 import com.example.todoapp.domain.model.User;
 import com.example.todoapp.domain.port.in.UserUseCase;
+import com.example.todoapp.domain.port.out.PasswordHasher;
 import com.example.todoapp.domain.port.out.UserRepository;
 import org.springframework.stereotype.Service;
 
@@ -9,9 +11,11 @@ import org.springframework.stereotype.Service;
 public class UserUseCaseImpl implements UserUseCase {
 
     private final UserRepository repository;
+    private final PasswordHasher passwordHasher;
 
-    public UserUseCaseImpl(UserRepository repository) {
+    public UserUseCaseImpl(UserRepository repository, PasswordHasher passwordHasher) {
         this.repository = repository;
+        this.passwordHasher = passwordHasher;
     }
 
     @Override
@@ -20,7 +24,7 @@ public class UserUseCaseImpl implements UserUseCase {
     }
 
     @Override
-    public String login(String username, String password) {
+    public AuthenticatedUser authenticate(String username, String password) {
         throw new UnsupportedOperationException("not implemented yet");
     }
 }

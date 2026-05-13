@@ -2,6 +2,8 @@ package com.example.todoapp.adapter.in.http;
 
 import com.example.todoapp.domain.model.Todo;
 import com.example.todoapp.domain.port.in.TodoUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.UUID;
 
+@Tag(name = "Todos", description = "Manage todo items")
 @CrossOrigin("*")
 @RestController
 @RequestMapping("/api/todos")
@@ -29,6 +32,7 @@ public class TodoController {
         this.todoUseCase = todoUseCase;
     }
 
+    @Operation(summary = "Get all todos")
     @GetMapping
     public List<TodoResponse> getAll() {
         return todoUseCase.getAll().stream()
@@ -36,17 +40,20 @@ public class TodoController {
                 .toList();
     }
 
+    @Operation(summary = "Create a new todo")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
         return toResponse(todoUseCase.create(request.title(), request.dueDate()));
     }
 
+    @Operation(summary = "Toggle completion status of a todo")
     @PatchMapping("/{id}")
     public TodoResponse toggle(@PathVariable UUID id) {
         return toResponse(todoUseCase.toggle(id));
     }
 
+    @Operation(summary = "Delete a todo")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {

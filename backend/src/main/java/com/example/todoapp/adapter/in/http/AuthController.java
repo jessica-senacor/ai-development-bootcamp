@@ -17,11 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final UserUseCase userUseCase;
-    private final TokenIssuer tokenIssuer;
+    private final JwtService jwtService;
 
-    public AuthController(UserUseCase userUseCase, TokenIssuer tokenIssuer) {
+    public AuthController(UserUseCase userUseCase, JwtService jwtService) {
         this.userUseCase = userUseCase;
-        this.tokenIssuer = tokenIssuer;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -29,12 +29,12 @@ public class AuthController {
     public TokenResponse register(@Valid @RequestBody RegisterRequest request) {
         userUseCase.register(request.username(), request.password());
         AuthenticatedUser authenticated = userUseCase.authenticate(request.username(), request.password());
-        return new TokenResponse(tokenIssuer.issue(authenticated));
+        return new TokenResponse(jwtService.issue(authenticated));
     }
 
     @PostMapping("/login")
     public TokenResponse login(@Valid @RequestBody LoginRequest request) {
         AuthenticatedUser authenticated = userUseCase.authenticate(request.username(), request.password());
-        return new TokenResponse(tokenIssuer.issue(authenticated));
+        return new TokenResponse(jwtService.issue(authenticated));
     }
 }

@@ -26,7 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, TokenVerifier tokenVerifier) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtService jwtService) throws Exception {
         return http
                 // CSRF protection guards against forged requests that ride on browser-attached
                 // session cookies. We authenticate via the Authorization header (bearer JWT),
@@ -47,11 +47,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated())
 
                 // Insert JwtFilter before the slot where form login would normally run.
-                // The filter reads "Authorization: Bearer ...", asks TokenVerifier to validate
+                // The filter reads "Authorization: Bearer ...", asks JwtService to validate
                 // and extract the UUID, then puts an Authentication (principal = UUID) on
                 // SecurityContextHolder so downstream authorize checks pass and controllers
                 // can read the current user.
-                .addFilterBefore(new JwtFilter(tokenVerifier), UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(new JwtFilter(jwtService), UsernamePasswordAuthenticationFilter.class)
 
                 .build();
     }

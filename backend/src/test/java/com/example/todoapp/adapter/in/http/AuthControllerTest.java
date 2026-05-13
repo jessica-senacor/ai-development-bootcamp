@@ -29,7 +29,7 @@ class AuthControllerTest {
     UserUseCase userUseCase;
 
     @MockitoBean
-    TokenIssuer tokenIssuer;
+    JwtService jwtService;
 
     @Test
     void register_validBody_returns201WithToken() throws Exception {
@@ -37,7 +37,7 @@ class AuthControllerTest {
         AuthenticatedUser authenticated = new AuthenticatedUser(id, "alice");
         when(userUseCase.register("alice", "secret")).thenReturn(new User(id, "alice", "hash"));
         when(userUseCase.authenticate("alice", "secret")).thenReturn(authenticated);
-        when(tokenIssuer.issue(authenticated)).thenReturn("jwt-token");
+        when(jwtService.issue(authenticated)).thenReturn("jwt-token");
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -53,7 +53,7 @@ class AuthControllerTest {
         UUID id = UUID.randomUUID();
         AuthenticatedUser authenticated = new AuthenticatedUser(id, "carol");
         when(userUseCase.authenticate("carol", "pass456")).thenReturn(authenticated);
-        when(tokenIssuer.issue(authenticated)).thenReturn("jwt-token");
+        when(jwtService.issue(authenticated)).thenReturn("jwt-token");
 
         mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)

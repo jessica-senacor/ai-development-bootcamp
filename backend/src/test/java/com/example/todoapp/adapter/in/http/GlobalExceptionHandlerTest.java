@@ -48,7 +48,7 @@ class GlobalExceptionHandlerTest {
     UserUseCase userUseCase;
 
     @MockitoBean
-    TokenIssuer tokenIssuer;
+    JwtService jwtService;
 
     @BeforeEach
     void setUp() {

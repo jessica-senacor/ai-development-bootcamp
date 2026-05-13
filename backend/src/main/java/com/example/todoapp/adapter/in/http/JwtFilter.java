@@ -10,10 +10,10 @@ import java.io.IOException;
 
 public class JwtFilter extends OncePerRequestFilter {
 
-    private final TokenVerifier tokenVerifier;
+    private final JwtService jwtService;
 
-    public JwtFilter(TokenVerifier tokenVerifier) {
-        this.tokenVerifier = tokenVerifier;
+    public JwtFilter(JwtService jwtService) {
+        this.jwtService = jwtService;
     }
 
     @Override

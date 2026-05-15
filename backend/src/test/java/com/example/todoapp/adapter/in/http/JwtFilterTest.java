@@ -41,7 +41,7 @@ class JwtFilterTest {
         new JwtFilter(jwtService).doFilter(request, response, chain);
 
         assertNull(SecurityContextHolder.getContext().getAuthentication());
-        verify(chain).doFilter(request, response);
+        verify(chain).doFilter(request, response); // checks the mocked FilterChain had its doFilter method called exactly once with those specific arguments
     }
 
     @Test

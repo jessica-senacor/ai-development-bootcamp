@@ -35,13 +35,17 @@ export function initAuth({ onAuthenticated }) {
     clearError();
     const username = document.getElementById('username-input').value.trim();
     const password = document.getElementById('password-input').value;
-    if (!username || !password) return;
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+      if (res.status === 400) {
+        const problem = await res.json().catch(() => ({}));
+        showError(problem.detail || 'Login failed.');
+        return;
+      }
       if (!res.ok) { showError('Invalid username or password.'); return; }
       const { token } = await res.json();
       localStorage.setItem('token', token);
@@ -87,6 +91,8 @@ export function initAuth({ onAuthenticated }) {
     localStorage.removeItem('token');
     document.getElementById('username-input').value = '';
     document.getElementById('password-input').value = '';
+    document.getElementById('todo-input').value = '';
+    document.getElementById('due-date-input').value = '';
     showAuth();
   });
 }

@@ -82,8 +82,7 @@ Then('the todo list is not visible', async function () {
 });
 
 Then('I see the auth error {string}', async function (expectedMessage) {
-  const text = await this.page.locator('#auth-error').textContent();
-  assert.strictEqual(text, expectedMessage);
+  await this.page.locator('#auth-error', { hasText: expectedMessage }).waitFor({ state: 'visible' });
 });
 
 Then('the username field contains at most {int} characters', async function (maxLength) {

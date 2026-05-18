@@ -56,7 +56,6 @@ export function initAuth({ onAuthenticated }) {
     clearError();
     const username = document.getElementById('username-input').value.trim();
     const password = document.getElementById('password-input').value;
-    if (!username || !password) return;
     try {
       const res = await fetch('http://localhost:8080/api/auth/register', {
         method: 'POST',
@@ -64,6 +63,11 @@ export function initAuth({ onAuthenticated }) {
         body: JSON.stringify({ username, password }),
       });
       if (res.status === 409) { showError('Username already taken.'); return; }
+      if (res.status === 400) {
+        const problem = await res.json().catch(() => ({}));
+        showError(problem.detail || 'Registration failed.');
+        return;
+      }
       if (!res.ok) { showError('Registration failed.'); return; }
       const loginRes = await fetch('http://localhost:8080/api/auth/login', {
         method: 'POST',

@@ -44,6 +44,7 @@ public class SecurityConfig {
                 //   absence of one yields 401.
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/todos/reset").permitAll()
                         .anyRequest().authenticated())
 
                 // Insert JwtFilter before the slot where form login would normally run.

@@ -1,3 +1,4 @@
+@auth
 Feature: User authentication
 
   Background:

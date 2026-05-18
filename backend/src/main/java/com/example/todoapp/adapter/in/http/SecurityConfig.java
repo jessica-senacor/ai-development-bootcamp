@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/todos/reset").permitAll()
+                        .requestMatchers("/", "/index.html", "/css/**", "/src/**").permitAll()
                         .anyRequest().authenticated())
 
                 // Insert JwtFilter before the slot where form login would normally run.

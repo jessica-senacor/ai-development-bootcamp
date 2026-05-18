@@ -1,4 +1,4 @@
-const BASE = 'http://localhost:8080';
+const BASE = '';
 
 let _token = null;
 

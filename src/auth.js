@@ -37,7 +37,7 @@ export function initAuth({ onAuthenticated }) {
     const password = document.getElementById('password-input').value;
     if (!username || !password) return;
     try {
-      const res = await fetch('http://localhost:8080/api/auth/login', {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -57,7 +57,7 @@ export function initAuth({ onAuthenticated }) {
     const username = document.getElementById('username-input').value.trim();
     const password = document.getElementById('password-input').value;
     try {
-      const res = await fetch('http://localhost:8080/api/auth/register', {
+      const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -69,7 +69,7 @@ export function initAuth({ onAuthenticated }) {
         return;
       }
       if (!res.ok) { showError('Registration failed.'); return; }
-      const loginRes = await fetch('http://localhost:8080/api/auth/login', {
+      const loginRes = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),

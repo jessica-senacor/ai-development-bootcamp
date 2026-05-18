@@ -22,6 +22,22 @@ function clearError() {
   authError.classList.add('hidden');
 }
 
+function clearSession() {
+  localStorage.removeItem('token');
+  document.getElementById('username-input').value = '';
+  document.getElementById('password-input').value = '';
+  document.getElementById('todo-input').value = '';
+  document.getElementById('due-date-input').value = '';
+  showAuth();
+}
+
+// Called by api.js when any request returns 401 — the token expired, was revoked,
+// or never was valid. Drop the session and tell the user why.
+export function handleSessionExpired() {
+  clearSession();
+  showError('Your session expired. Please log in again.');
+}
+
 export function initAuth({ onAuthenticated }) {
   const token = localStorage.getItem('token');
   if (token) {
@@ -88,11 +104,7 @@ export function initAuth({ onAuthenticated }) {
   });
 
   document.getElementById('logout-btn').addEventListener('click', () => {
-    localStorage.removeItem('token');
-    document.getElementById('username-input').value = '';
-    document.getElementById('password-input').value = '';
-    document.getElementById('todo-input').value = '';
-    document.getElementById('due-date-input').value = '';
-    showAuth();
+    clearError();
+    clearSession();
   });
 }

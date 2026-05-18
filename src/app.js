@@ -1,5 +1,7 @@
-import { fetchTodos, createTodo, toggleTodo, deleteTodo, setToken } from './api.js';
-import { initAuth } from './auth.js';
+import { fetchTodos, createTodo, toggleTodo, deleteTodo, setToken, setOnUnauthorized } from './api.js';
+import { initAuth, handleSessionExpired } from './auth.js';
+
+setOnUnauthorized(handleSessionExpired);
 
 const input        = document.getElementById('todo-input');
 const dueDateInput = document.getElementById('due-date-input');

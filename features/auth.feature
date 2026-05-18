@@ -35,6 +35,12 @@ Feature: User authentication
     Then the login form is visible
     And the todo list is not visible
 
+  Scenario: Invalid stored token returns the user to the login page
+    When the stored token is invalid and the app reloads
+    Then the login form is visible
+    And the todo list is not visible
+    And I see the auth error "Your session expired. Please log in again."
+
   Scenario: Username field does not accept more than 50 characters
     When I type 51 characters into the username field
     Then the username field contains at most 50 characters

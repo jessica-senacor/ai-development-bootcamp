@@ -1,4 +1,7 @@
-import { fetchTodos, createTodo, toggleTodo, deleteTodo } from './api.js';
+import { fetchTodos, createTodo, toggleTodo, deleteTodo, setToken, setOnUnauthorized } from './api.js';
+import { initAuth, handleSessionExpired } from './auth.js';
+
+setOnUnauthorized(handleSessionExpired);
 
 const input        = document.getElementById('todo-input');
 const dueDateInput = document.getElementById('due-date-input');
@@ -74,4 +77,9 @@ list.addEventListener('click', async e => {
   }
 });
 
-refresh();
+initAuth({
+  onAuthenticated(token) {
+    setToken(token);
+    refresh();
+  },
+});

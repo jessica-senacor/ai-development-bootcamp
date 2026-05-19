@@ -4,6 +4,7 @@ import com.example.todoapp.domain.model.Todo;
 import com.example.todoapp.domain.port.in.TodoUseCase;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class TodoController {
 
     @GetMapping
     public List<TodoResponse> getAll() {
-        return todoUseCase.getAll().stream()
+        return todoUseCase.getAll(currentUserId()).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -39,18 +40,22 @@ public class TodoController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public TodoResponse create(@Valid @RequestBody CreateTodoRequest request) {
-        return toResponse(todoUseCase.create(request.title(), request.dueDate()));
+        return toResponse(todoUseCase.create(currentUserId(), request.title(), request.dueDate()));
     }
 
     @PatchMapping("/{id}")
     public TodoResponse toggle(@PathVariable UUID id) {
-        return toResponse(todoUseCase.toggle(id));
+        return toResponse(todoUseCase.toggle(currentUserId(), id));
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable UUID id) {
-        todoUseCase.delete(id);
+        todoUseCase.delete(currentUserId(), id);
+    }
+
+    private UUID currentUserId() {
+        return (UUID) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
     private TodoResponse toResponse(Todo todo) {
